@@ -1,0 +1,40 @@
+class Main {
+    function void main() {
+        var Wave wave;
+        var StepGenerator stepGen;
+        var Princess princess;
+        var boolean exit;
+        var int i;
+        var int stepCounter;    // Counter for step movement timing
+
+        let wave = Wave.new();
+        let stepGen = StepGenerator.new();
+        let princess = Princess.new(stepGen);
+        let exit = false;
+        let stepCounter = 0;
+
+        while(~exit) {
+            
+            // Check for Enter key (key code 128)
+            if (Keyboard.keyPressed() = 128) {
+                do stepGen.startMoving();
+            }
+
+            do wave.updateWave();
+            do princess.update();
+            do stepGen.update(); // Steps move left
+            do Sys.wait(16);  // Base game delay
+    
+          if (Keyboard.keyPressed() = 140) {  // ESC key
+                let exit = true;
+            }
+        }        
+
+        do wave.dispose();
+        do princess.dispose();
+        do stepGen.dispose();
+
+        return;
+    }
+        
+}

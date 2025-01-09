@@ -1,0 +1,219 @@
+class StepGenerator {
+    static int rightmost; // Tracks the rightmost step
+    field int width;
+    field int location;    // Left x-coordinate of the step
+    field int destroy_location;
+    field boolean isMoving;
+
+    
+    // Top-left corner of collision box
+    field int tl0x;
+    field int tl0y;
+    
+    // Bottom-right corner of collision box
+    field int br0x;
+    field int br0y;
+
+    field boolean isGrowing;    // Track if we're in growing phase
+    field int growthProgress;   // Track growth progress
+    
+    constructor StepGenerator new() {
+        do LCGRandom.setSeed(1234);  // You can use any non-zero number as seed
+        let rightmost = 40;
+        let isGrowing = false;
+        let isMoving = false;  // Start with no movement
+        let growthProgress = 0;
+        do createInitialStep();
+        return this;
+    }
+    
+    method void createInitialStep() {
+    let width = 70;
+    // Position roughly in middle of screen
+    let br0x = 80;  
+    let tl0y = 200;  // Fixed height for initial step
+    let tl0x = br0x - width;  // Calculate left edge
+    let br0y = tl0y + 1;
+    
+    let rightmost = br0x;
+    let destroy_location = 0;
+    let location = br0x;
+    let isGrowing = false;  // Don't grow the initial step
+    let growthProgress = width;  // Set to full width immediately
+
+    // Draw the initial step
+    do Screen.setColor(true);
+    do Screen.drawRectangle(tl0x, tl0y, br0x, br0y);
+    
+    return;
+
+    }
+
+    method void startMoving() {
+        let isMoving = true;
+        return;
+    }
+
+    method void reset() {
+        var int gap;
+        var int randHeight;
+
+        // Check if this is the first movement after initial step
+        if (isMoving & (br0x > 0) & (~(br0x > 80))) {  // If we're at initial position
+        // Keep current y position and just move left
+        return;
+        }
+
+        let width = 70;
+        let gap = 50; // Gap between steps
+        
+         //Generate a random height between 150 and 250
+        let randHeight = LCGRandom.randRange(150, 205);
+
+         //Position the step on the left part 
+        let br0x = 511 ;
+        let tl0y = randHeight;
+        let tl0x = br0x;
+        let br0y = tl0y + 1;
+        
+        //Update the rightmost step
+        let rightmost = br0x;
+        
+        //Set the destroy location
+        let destroy_location = 0; 
+        let location = br0x;
+
+        //Initialize growing state
+        let isGrowing = true;
+        let growthProgress = 0;
+    
+        return;
+    }
+
+    method int getInitialX() {
+        return tl0x + (width / 2);  // Middle of the step
+    }
+    
+    method int getInitialY() {
+        return tl0y;  // Top of the step
+    }
+
+    
+    method void update() {
+        var int drawStart;
+        
+        if (~isMoving) {
+            return;
+        }
+
+        // Handle growing phase
+        if (isGrowing) {
+            if (growthProgress < width) {
+                // Erase previous
+                do Screen.setColor(false);
+                do Screen.drawRectangle(tl0x, tl0y, br0x, br0y);
+                
+                // Increase width by 1 pixel
+                let growthProgress = growthProgress + 1;
+                let tl0x  = br0x - growthProgress;
+                
+                // Draw new
+                do Screen.setColor(true);
+                do Screen.drawRectangle(tl0x, tl0y, br0x, br0y);
+                return;
+            } else {
+                let isGrowing = false;
+            }
+        }
+
+        // Normal movement phase
+        if (~(br0x > 0)) {
+            do reset(); 
+        }
+
+        // Erase current rectangle
+        do Screen.setColor(false);
+        if (tl0x < 0) {
+            do Screen.drawRectangle(0, tl0y, br0x, br0y);
+        } else {
+            do Screen.drawRectangle(tl0x, tl0y, br0x, br0y);
+        }
+
+         // Move the step to the left
+        let location = location - 1;
+        let tl0x = tl0x - 1;
+        let br0x = br0x - 1;
+
+         // Draw new rectangle, but only the visible part
+        do Screen.setColor(true);
+        // Calculate valid starting x coordinate
+        let drawStart = Math.max(0, tl0x);
+
+         if (br0x > 0) {  // Only draw if right edge is still visible
+            do Screen.drawRectangle(drawStart, tl0y, br0x, br0y);
+        }
+        
+        return;
+    }
+    
+    method boolean collision(int tl1x, int tl1y, int br1x, int br1y) {
+        // Check if this step intersects with another rectangle
+        if ((tl0x > br1x) | (tl1x > br0x)) { return false; } 
+        if ((tl0y > br1y) | (tl1y > br0y)) { return false; } 
+        return true; 
+    }
+
+    //platform collision
+     method int getTopY() {
+        return tl0y;
+    }
+    
+    method int getLeftX() {
+        return tl0x;
+    }
+
+    method int getRightX() {
+        return br0x;
+    }
+    
+     /*method boolean collision(int charX, int charY, int charWidth, int charHeight) {
+        var int charBottom, charRight;
+        var int prevCharBottom;
+        
+        let charRight = charX + charWidth;
+        let charBottom = charY + charHeight;
+        let prevCharBottom = charBottom - 4;  // Assuming 4 is falling speed
+        
+        // Only check for collision if character is within horizontal bounds of step
+        if ((charRight < tl0x) | (charX > br0x)) {
+            return false;
+        }
+        
+        // Check if character is landing on top of the step
+        if (~(prevCharBottom > tl0y) & (~(charBottom < tl0y))) {
+            return true;
+        }
+        
+        return false;
+    } */
+
+    method int getStandingY() {
+        return tl0y;  // Position character right above the step
+    }
+
+    method boolean isStandingOn(int objectX, int objectWidth, int objectBottomY) {
+    if (~(objectBottomY = tl0y)) { 
+    return false; 
+    }
+    // Check if object is horizontally within step bounds
+    if ((objectX + objectWidth < tl0x) | (objectX > br0x)) { 
+        return false; 
+    }
+    return true;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

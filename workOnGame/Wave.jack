@@ -1,0 +1,93 @@
+class Wave {
+
+    static int waveWidth;       //width of a single wave segment = 42 pixels  (bitmap)
+    
+    field int yPos;        // fixed y position of the waves
+    field int xPos;        // current x position for scrolling
+    field int clock;       // for controlling animation speed
+
+
+    constructor Wave new() {
+        let waveWidth = 42;
+        let yPos = 210;
+        let xPos = 0;
+        let clock = 0;
+        return this;
+    }
+
+    method void updateWave(){
+        // Update position every few ticks for smooth scrolling
+        if (clock = 5) {
+            let clock = 0;
+            let xPos = xPos + 1;      // Move right by 1 pixel
+            if (xPos > 2) {           // After 3 pixels (pattern width), reset
+                let xPos = 0;
+            }
+        }
+        do drawWaveSegment(xPos);
+        let clock = clock + 1 ;
+        return;
+    }
+
+    /** Draws a single wave segment at the specified x position */
+    method void drawWaveSegment(int location) {
+	var int memAddress;
+    var int i;
+    let memAddress = 16384 + (yPos * 32) + location;
+
+    // Loop through all 32 columns to cover 512 pixels
+    let i = 0;
+    while (i < 32) {  // 32 columns * 16 pixels = 512 pixels total width
+	// Column 0 pattern
+        do Memory.poke(memAddress + i, 771);
+        do Memory.poke(memAddress + (i + 32), 1670);
+        do Memory.poke(memAddress + (i + 64), -31419);
+        do Memory.poke(memAddress + (i + 96), 16673);
+        do Memory.poke(memAddress + (i + 128), 8722);
+        do Memory.poke(memAddress + (i + 160), 7180);
+        // Column 1 pattern
+        do Memory.poke(memAddress + (i + 1), 3078);
+        do Memory.poke(memAddress + (i + 33), 6669);
+        do Memory.poke(memAddress + (i + 65), 5386);
+        do Memory.poke(memAddress + (i + 97), 1154);
+        do Memory.poke(memAddress + (i + 129), -30652);
+        do Memory.poke(memAddress + (i + 161), 28728);
+        // Column 2 pattern
+        do Memory.poke(memAddress + (i + 2), 12312);
+        do Memory.poke(memAddress + (i + 34), 26676);
+        do Memory.poke(memAddress + (i + 66), 21546);
+        do Memory.poke(memAddress + (i + 98), 8713);
+        do Memory.poke(memAddress + (i + 130), 8464);
+        do Memory.poke(memAddress + (i + 162), -16160);
+        
+        let i = i + 3;  // Move to next 3-column block
+    }
+    return;
+    }
+
+    /** Gets the current y position of the waves */
+    method int getYPosition() {
+        return yPos;
+    }
+
+    /** 
+     * Checks if the princess has collided with the water
+     * princessY is the bottom position of the princess sprite 
+     */
+      method boolean checkCollision(int princessY) {
+        var int waterLine;
+        let waterLine = 226;  // same as yPos
+        
+        if (princessY > waterLine) {
+            return true;  // princess has hit water
+        }
+        return false;    // princess is safe
+    }
+
+     /** Disposes this wave */
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+}

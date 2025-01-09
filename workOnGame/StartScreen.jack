@@ -1,0 +1,140 @@
+class StartScreen {
+    field DrawingGraphics graphics;
+    
+    /** Constructs a new StartScreen */
+    constructor StartScreen StartScreen() {
+        return this;
+    }
+
+    /** Draws all static elements at once for better performance */
+    method void drawStaticElements() {
+        var String text;
+        
+        // Clear screen once at start
+        do Screen.clearScreen();
+        
+        // Draw princess using your bitmap
+        do graphics.drawPrincess(2300);
+        do Sys.wait(400);
+        
+        // Display the game title
+        let text = "Princess Parkour Adventure!";
+        do graphics.drawHeart(6350);
+        do graphics.drawSnowflake(500);
+        do Output.moveCursor(5, 10);
+        do Output.printString(text);
+        do text.dispose();
+        do Sys.wait(800);
+        
+        let text = "Collect: Hearts (+5), Snowflakes (+3), Bunnies (+1)";
+        do Output.moveCursor(8, 5);
+        do Output.printString(text);
+        do graphics.drawHeart(1000);
+        do graphics.drawSnowflake(1200);
+        do graphics.drawSpider(8000);
+        do graphics.drawHeart(6360);
+        do text.dispose();
+        do Sys.wait(800);
+        
+        let text = "Watch out for spiders and unsafe platforms!";
+        do Output.moveCursor(10, 10);
+        do Output.printString(text);
+        do graphics.drawSpider(1400);
+        do graphics.drawSnowflake(500);
+        do graphics.drawPrincess(8200);
+        do graphics.drawHeart(7900);
+        do graphics.drawSnowflake(8400);
+        do text.dispose();
+        do Sys.wait(400);
+        
+        let text = "Press T - Tutorial";
+        do Output.moveCursor(12, 10);
+        do Output.printString(text);
+        do graphics.drawSnowflake(6000);
+        do text.dispose();
+        do Sys.wait(800);
+
+        
+        let text = "Press any key to start your adventure...";
+        do Output.moveCursor(14, 10);
+        do Output.printString(text);
+        do text.dispose();
+        do Sys.wait(800);
+        
+        return;
+    }
+
+    /** Main method for the start screen */
+    method int go() {
+        var boolean break;
+        var int key;
+        
+        // Draw all elements at once
+        do drawStaticElements();
+        
+        // Wait for the user to press any key
+        let break = false;
+        while (~break) {
+            let key = Keyboard.keyPressed();
+            if (key = 84) { 
+                do showTutorial();
+                // Redraw screen after tutorial
+                do drawStaticElements();
+            } 
+            else {                              //this is where our game starts
+                if (key > 0) { 
+                    let break = true;
+                }
+            }
+        }
+        return key;
+    }
+    
+    //Shows the tutorial screen if key pressed is detected to be T
+
+    method void showTutorial() {
+        var String text;
+        // Clear the screen
+        do Screen.clearScreen();
+        // Display tutorial text
+        let text = "Tutorial: Learn the basics of Princess Parkour!";
+        do Output.moveCursor(4, 10);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "1. Jump over obstacles using SPACE.";
+        do Output.moveCursor(6, 10);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "2. Use LEFT/RIGHT arrows to move.";
+        do Output.moveCursor(8, 10);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "3. Avoid spiders and unstable platforms.";
+        do Output.moveCursor(10, 10);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "Press any key to return to the start screen...";
+        do Output.moveCursor(12, 10);
+        do Output.printString(text);
+        do text.dispose();
+        
+        // Wait for key release first
+        while (Keyboard.keyPressed() > 0) {}
+        // Then wait for next key press
+        while (Keyboard.keyPressed() = 0) {}
+        // Wait for key release again to prevent immediate exit
+        while (Keyboard.keyPressed() > 0) {}
+        return;
+    }
+
+    /** Disposes of this start screen */
+    method void dispose() {
+        do graphics.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

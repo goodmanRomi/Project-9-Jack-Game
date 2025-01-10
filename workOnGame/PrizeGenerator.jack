@@ -1,0 +1,125 @@
+class PrizeGenerator {
+
+    field int middleX, middleY;  // Center of the prize
+    field int radius;           // Radius for collision detection
+    field boolean isMoving;     // Movement state
+    field int width, height;    // Dimensions of the prize
+
+    field int oldLocation, newLocation;
+
+    constructor PrizeGenerator new(int startX, int startY) {
+        // Initialize fields
+        let isMoving = false;  // Prize starts stationary
+        let radius = 10;       // Collision radius
+        let width = 16;        // Width of the prize sprite
+        let height = 16;       // Height of the prize sprite
+
+        // Set initial position (randomized near startX, startY)
+        if (Keyboard.keyPressed() = 13) {  // If Enter is pressed
+            do LCGRandom.setSeed(1234);
+            let middleX = LCGRandom.randRange(startX - 50, startX + 50);
+            let middleY = LCGRandom.randRange(startY - 10, startY + 10);
+        }
+
+        // Draw the initial prize
+        do drawHeart(getMemLocation());
+        return this;
+    }
+
+    method int getMemLocation() {
+        // Convert (middleX, middleY) to memory location
+        return ((middleY * 32) + (middleX / 16));
+    }
+
+    method void startMoving() {
+        let isMoving = true;
+        return;
+    }
+
+    method void update() {
+
+        if (~isMoving) {
+            return;  // Don't move if not active
+        }
+
+        // Save the current memory location
+        let oldLocation = getMemLocation();
+
+        // Move the prize left by 1 pixel
+        let middleX = middleX - 1;
+
+        // Update the memory location
+        let newLocation = getMemLocation();
+
+        // Erase the prize at the old location and redraw at the new location
+        if (~(oldLocation = newLocation)) {
+            do eraseHeart(oldLocation);
+            do drawHeart(newLocation);
+        }
+
+        return;
+    }
+
+    method boolean checkCollection(int princessX, int princessY) {
+        // Check if the princess is within the radius of the prize
+        var int deltaX, deltaY, distanceSquared;
+
+        let deltaX = middleX - princessX;
+        let deltaY = middleY - princessY;
+
+        // Calculate squared distance
+        let distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
+
+        // Check if the distance is within the radius squared
+        if (~(distanceSquared > (radius * radius))) {
+            return true;  // Collected
+        }
+
+        return false;  // Not collected
+    }
+
+    method void drawHeart(int location) {
+        var int memAddress; 
+        let memAddress = 16384 + location;
+
+        // Example: Heart sprite
+        do Memory.poke(memAddress -352, 7196);
+        do Memory.poke(memAddress -320, 9790);
+        do Memory.poke(memAddress -288, 28543);
+        do Memory.poke(memAddress -256, 30719);
+        do Memory.poke(memAddress -224, 32767);
+        do Memory.poke(memAddress -192, 16382);
+        do Memory.poke(memAddress -160, 8188);
+        do Memory.poke(memAddress -128, 4088);
+        do Memory.poke(memAddress -96, 2032);
+        do Memory.poke(memAddress -64, 992);
+        do Memory.poke(memAddress -32, 448);
+        do Memory.poke(memAddress, 128);
+        return;
+    }
+
+    method void eraseHeart(int location) {
+        var int memAddress; 
+        let memAddress = 16384 + location;
+
+        // Clear the memory location
+        do Memory.poke(memAddress -352, 0);
+        do Memory.poke(memAddress -320, 0);
+        do Memory.poke(memAddress -288, 0);
+        do Memory.poke(memAddress -256, 0);
+        do Memory.poke(memAddress -224, 0);
+        do Memory.poke(memAddress -192, 0);
+        do Memory.poke(memAddress -160, 0);
+        do Memory.poke(memAddress -128, 0);
+        do Memory.poke(memAddress -96, 0);
+        do Memory.poke(memAddress -64, 0);
+        do Memory.poke(memAddress -32, 0);
+        do Memory.poke(memAddress, 0);
+        return;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

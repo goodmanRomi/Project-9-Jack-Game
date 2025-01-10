@@ -5,7 +5,7 @@ class Princess {
     field int xVel;
     field int yVel;          // Vertical velocity
     field boolean isJumping;
-    field StepGenerator step; // Reference to our step
+    field StepManager stepManager;
     field boolean isDead;
 	field boolean onPlatform;
 	field Wave wave;
@@ -15,20 +15,20 @@ class Princess {
 
     // Constants
 
-    constructor Princess new(StepGenerator stepRef) {
+    constructor Princess new(StepManager stepManagerRef) {
     	let wave = Wave.new();
 		let isDead = false;
-		let step = stepRef;
+		let stepManager = stepManagerRef;
         // Size of princess hitbox
         let width = 2;
         let height = 23;
         
 		//Initialize position tracking
-		let initialX = stepRef.getInitialX();
+		let initialX = stepManagerRef.getInitialX();
       	let balanceX = 0;
 		// Initial position on the step
         let xPos = initialX; // Center on step
-        let yPos = stepRef.getTopY()-1;      // Stand on top
+        let yPos = stepManagerRef.getTopY()-1;      // Stand on top
         let yVel = 0;
 		let xVel = 0;
         let isJumping = false;
@@ -104,7 +104,7 @@ class Princess {
 		var int footPosition; //track foot position 
 		
 		let onPlatform = false;
-    	if (step.isStandingOn(xPos, width, yPos-1)) { 
+    	if (stepManager.isStandingOnAny(xPos, width, yPos-1)) { 
 		let onPlatform = true; 
 		} else {
         // If not on platform and not already jumping/falling, start falling
@@ -130,16 +130,16 @@ class Princess {
             }
 		}
 		if (yVel > 0) {
-			if (step.isStandingOn(xPos, width, yPos + yVel)){
+			if (stepManager.isStandingOnAny(xPos, width, yPos-1)){
 			let isJumping = false;
 			let yVel = 0;
-			let yPos = step.getTopY()-1;
+			let yPos = stepManager.getTopY()-1;
 			let onPlatform = true;
 			}
 		} let xPos = xPos + xVel; 
 
 		// Check if walked off platform
-        if ((~isJumping) & (~(step.isStandingOn(xPos, width, yPos)))) {
+        if ((~isJumping) & (~(stepManager.isStandingOnAny(xPos, width, yPos-1)))) {
             let isJumping = true;
 			let onPlatform = false;  // Start falling if no platform below
             let yVel = 0;  // Start fall from rest

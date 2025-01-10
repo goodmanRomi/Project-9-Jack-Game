@@ -6,6 +6,7 @@ class Princess {
     field boolean isJumping;
     field StepGenerator step; // Reference to our step
     field boolean isDead;
+	field boolean onPlatform;
 	field Wave wave;
     // Constants
 
@@ -23,6 +24,7 @@ class Princess {
         let yVel = 0;
 		let xVel = 0;
         let isJumping = false;
+		let onPlatform = true;
         // Draw initial position
         do drawPrincess(getMemLocation());
 
@@ -57,7 +59,6 @@ class Princess {
 	}
 
    method void princessMovement(){
-		var boolean onPlatform;
 		var int originaldy;
 		var int footPosition; //track foot position 
 		

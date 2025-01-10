@@ -4,28 +4,27 @@ class Princess {
     field int xVel;
     field int yVel;          // Vertical velocity
     field boolean isJumping;
+	field boolean wasOnPlatform;
     field StepGenerator step; // Reference to our step
-    
+    field boolean isDead;
+	field Wave wave;
     // Constants
-    field int GRAVITY;
-    field int JUMP_POWER;
 
     constructor Princess new(StepGenerator stepRef) {
-    let step = stepRef;
+    	let wave = Wave.new();
+		let isDead = false;
+		let step = stepRef;
         // Size of princess hitbox
         let width = 2;
         let height = 23;
         
-        // Physics constants
-        let GRAVITY = 3;
-        let JUMP_POWER = -30;  // Negative because y increases downward
-
       // Initial position on the step
-        let xPos = stepRef.getInitialX() - (width / 2); // Center on step
-        let yPos = stepRef.getInitialY();      // Stand on top
+        let xPos = stepRef.getInitialX(); // Center on step
+        let yPos = stepRef.getTopY()-1;      // Stand on top
         let yVel = 0;
+		let xVel = 0;
         let isJumping = false;
-        
+       	let wasOnPlatform = false;
         // Draw initial position
         do drawPrincess(getMemLocation());
 
@@ -36,60 +35,12 @@ class Princess {
         return ((yPos * 32) + (xPos / 16));
     }
 
-    function void set_physics(int gravity, int jump_velocity) {
-		let GRAVITY = gravity;
-		let JUMP_POWER = jump_velocity;
-		return;
-	}
-	function void update_jump(int change) {
-		let JUMP_POWER = JUMP_POWER - (change + change + change + change + change); // jump - 5 * change
-		if ((JUMP_POWER < (-45)) | (JUMP_POWER > (-15))) {let JUMP_POWER = -30;} // reset jump velocity if it is out of bounds
-		return;
-	}
-
-	method void set_velocity(int vel) {
-		let yVel = vel;
-		return;
-	}
-
     method void update() {
-    var boolean onPlatform;
-    var int oldLocation, newLocation;
-    
-    let oldLocation = getMemLocation();
-    let onPlatform = step.isStandingOn(xPos, width, yPos);
-    
-    //handle horizontal movement
-    let xVel = 0; //reset horizontal velocity
-    if (Keyboard.keyPressed() = 130) {
-        let xVel=-1;
-    } 
-    if (Keyboard.keyPressed()=132) {
-        let xVel = 1;
-    }
+		var int oldLocation, newLocation;
 
-    // Handle jumping with space
-    if (Keyboard.keyPressed() = 32) {  // Space bar
-        if (onPlatform & (~isJumping)) {
-            let yVel = JUMP_POWER;
-            let isJumping = true;
-        }
-    }
-
-    // Apply physics
-        if (~onPlatform) {
-            let yVel = yVel + GRAVITY;
-            let yPos = yPos + yVel;
-            let xPos = xPos + xVel ; 
-        } else {
-            if (yVel > 0) {  // If falling
-                let yPos = step.getStandingY() - height;
-                let yVel = 0;
-                let isJumping = false;
-            }
-
-            let xPos = xPos + xVel;
-        }
+		let oldLocation = getMemLocation();
+		do handleMovement();
+    	do princessMovement();
         
     // Drawing update
     let newLocation = getMemLocation();
@@ -97,18 +48,54 @@ class Princess {
         do erasePrincess(oldLocation);    // Use your erase method
         do drawPrincess(newLocation);     // Draw at new position
         }
-    
         return;
     }
     
-    /* method int jump() {
-		// only jump if on the ground 
-		if (onPlatform & (~isJumping)) {
-			let yVel = JUMP_POWER;
-			return 5;
+	method void handleMovement() {
+    let xVel = 0;
+    if ((Keyboard.keyPressed() = 130 | (Keyboard.keyPressed() = 32 & Keyboard.keyPressed() = 130)) ) { let xVel=-2; }
+    if ((Keyboard.keyPressed() = 132) | (Keyboard.keyPressed() = 32 & Keyboard.keyPressed() = 132)) { let xVel=2; }
+	return;
+	}
+
+   method void princessMovement(){
+		var boolean onPlatform;
+		var int originaldy;
+		var int previousY;
+		
+		
+		let previousY = yPos;
+		let wasOnPlatform = onPlatform;
+		let onPlatform = false;
+    	if (step.isStandingOn(xPos, width, yPos-1)) { let onPlatform = true; }
+		
+		if ((Keyboard.keyPressed() = 32) & onPlatform & (~(isJumping))) { 
+		let yVel = -15; 
+		let isJumping = true;
+		let onPlatform = false;
 		}
-		return -1;
-	} */
+
+		 if (isJumping) {
+			let yVel = yVel + 1;  
+    		let yPos = yPos + yVel;
+    		let xPos = xPos + xVel; 
+			} else { 
+				if (yVel > 0) {
+					if (step.isStandingOn(xPos, width, yPos-1)) {
+					let isJumping = false;
+					let yPos = step.getTopY()-1;
+					let yVel = 0;
+					let onPlatform = true;
+					} 
+			let xPos = xPos + xVel;
+		} }
+
+		if (xPos < 0) { let xPos = 0; }
+        if (xPos > (511 - width)) { let xPos = 511 - width; }
+
+		return;
+	}
+
 
     method void drawPrincess(int location) {
         var int memAddress; 
@@ -199,6 +186,28 @@ class Princess {
 		do Memory.poke(memAddress -63, 0);
 		return;
 	}
+	
+	method boolean isDead() {
+	if 	(wave.checkCollision(yPos)) {
+		return true;
+	} return false;
+	}
+
+	method int getCollisionTop() {
+        return yPos;
+    }
+
+    method int getCollisionBottom() {
+        return yPos + height;
+    }
+
+    method int getCollisionLeft() {
+        return xPos;
+    }
+
+    method int getCollisionRight() {
+        return xPos + width;
+    }
 
     method void dispose() {
         do Memory.deAlloc(this);

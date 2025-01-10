@@ -5,6 +5,7 @@ class Main {
         var Princess princess;
         var boolean exit;
         var int i;
+        var PrizeGenerator prizeGen;
         var int stepCounter;    // Counter for step movement timing
 
         let wave = Wave.new();
@@ -15,6 +16,8 @@ class Main {
         let stepGen5 = StepGenerator.new(410, 160);
         let stepGen6 = StepGenerator.new(495, 180);
         let princess = Princess.new(stepGen1);
+        let prizeGen = PrizeGenerator.new(300, 150);  // Initialize prize generator
+
         let exit = false;
         let stepCounter = 0;
 
@@ -27,6 +30,7 @@ class Main {
                 do stepGen4.startMoving();
                 do stepGen5.startMoving();
                 do stepGen6.startMoving();
+                do prizeGen.startMoving();  // Start the prize generator
             }
 
             do wave.updateWave();
@@ -37,6 +41,7 @@ class Main {
             do stepGen4.update();
             do stepGen5.update();
             do stepGen6.update();
+            do prizeGen.update();  // Update prize movement
             do Sys.wait(16);  // Base game delay
     
           if (Keyboard.keyPressed() = 140) {  // ESC key
@@ -52,6 +57,7 @@ class Main {
         do stepGen4.dispose();
         do stepGen5.dispose();
         do stepGen6.dispose();
+        do prizeGen.dispose();
 
         return;
     }

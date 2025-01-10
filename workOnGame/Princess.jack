@@ -4,7 +4,6 @@ class Princess {
     field int xVel;
     field int yVel;          // Vertical velocity
     field boolean isJumping;
-	field boolean wasOnPlatform;
     field StepGenerator step; // Reference to our step
     field boolean isDead;
 	field Wave wave;
@@ -24,7 +23,6 @@ class Princess {
         let yVel = 0;
 		let xVel = 0;
         let isJumping = false;
-       	let wasOnPlatform = false;
         // Draw initial position
         do drawPrincess(getMemLocation());
 
@@ -53,42 +51,43 @@ class Princess {
     
 	method void handleMovement() {
     let xVel = 0;
-    if ((Keyboard.keyPressed() = 130 | (Keyboard.keyPressed() = 32 & Keyboard.keyPressed() = 130)) ) { let xVel=-2; }
-    if ((Keyboard.keyPressed() = 132) | (Keyboard.keyPressed() = 32 & Keyboard.keyPressed() = 132)) { let xVel=2; }
+    if (((Keyboard.keyPressed() = 130) & onPlatform) | (Keyboard.keyPressed() = 32) & (Keyboard.keyPressed() = 130)) { let xVel=-2; }
+    if (((Keyboard.keyPressed() = 132) & onPlatform) | (Keyboard.keyPressed() = 32 & Keyboard.keyPressed() = 132)) { let xVel=2; }
 	return;
 	}
 
    method void princessMovement(){
 		var boolean onPlatform;
 		var int originaldy;
-		var int previousY;
+		var int footPosition; //track foot position 
 		
-		
-		let previousY = yPos;
-		let wasOnPlatform = onPlatform;
 		let onPlatform = false;
     	if (step.isStandingOn(xPos, width, yPos-1)) { let onPlatform = true; }
-		
+
 		if ((Keyboard.keyPressed() = 32) & onPlatform & (~(isJumping))) { 
 		let yVel = -15; 
 		let isJumping = true;
 		let onPlatform = false;
 		}
+		if (isJumping) {
+		let yVel = yVel + 1;  
+		let yPos = yPos + yVel;
+		let xPos = xPos + xVel; 
+		}
+		if (yVel > 0) {
+			if (step.isStandingOn(xPos, width, yPos + yVel)){
+			let isJumping = false;
+			let yVel = 0;
+			let yPos = step.getTopY()-1;
+			let onPlatform = true;
+			}
+		} let xPos = xPos + xVel; 
 
-		 if (isJumping) {
-			let yVel = yVel + 1;  
-    		let yPos = yPos + yVel;
-    		let xPos = xPos + xVel; 
-			} else { 
-				if (yVel > 0) {
-					if (step.isStandingOn(xPos, width, yPos-1)) {
-					let isJumping = false;
-					let yPos = step.getTopY()-1;
-					let yVel = 0;
-					let onPlatform = true;
-					} 
-			let xPos = xPos + xVel;
-		} }
+		// Check if walked off platform
+        if (~(step.isStandingOn(xPos, width, yPos))) {
+            let onPlatform = false;  // Start falling if no platform below
+            let yVel = 10;  // Start fall from rest
+        }
 
 		if (xPos < 0) { let xPos = 0; }
         if (xPos > (511 - width)) { let xPos = 511 - width; }

@@ -4,8 +4,7 @@ class PrizeGenerator {
     field int radius;           // Radius for collision detection
     field boolean isMoving;     // Movement state
     field int width, height;    // Dimensions of the prize
-
-    field int oldLocation, newLocation;
+    field int oldLocation, newLocation; // For erasing and redrawing
 
     constructor PrizeGenerator new(int startX, int startY) {
         // Initialize fields
@@ -15,14 +14,24 @@ class PrizeGenerator {
         let height = 16;       // Height of the prize sprite
 
         // Set initial position (randomized near startX, startY)
-        if (Keyboard.keyPressed() = 13) {  // If Enter is pressed
-            do LCGRandom.setSeed(1234);
-            let middleX = LCGRandom.randRange(startX - 50, startX + 50);
-            let middleY = LCGRandom.randRange(startY - 10, startY + 10);
-        }
+        do Output.printString("Enter key pressed\n");
+        do LCGRandom.setSeed(1234);
 
-        // Draw the initial prize
-        do drawHeart(getMemLocation());
+        // Randomize the position of the prize
+        let middleX = LCGRandom.randRange(startX - 50, startX + 50);
+        let middleY = LCGRandom.randRange(startY - 10, startY + 10);
+
+        // Debug: Print randomized coordinates
+        do Output.printString("middleX: ");
+        do Output.printInt(middleX);
+        do Output.printString(", middleY: ");
+        do Output.printInt(middleY);
+        do Output.printString("\n");
+
+        // Calculate memory location and draw the heart
+        let newLocation = getMemLocation();
+        do drawHeart(600);
+
         return this;
     }
 
@@ -37,7 +46,6 @@ class PrizeGenerator {
     }
 
     method void update() {
-
         if (~isMoving) {
             return;  // Don't move if not active
         }
@@ -82,7 +90,7 @@ class PrizeGenerator {
         var int memAddress; 
         let memAddress = 16384 + location;
 
-        // Example: Heart sprite
+        // Draw heart sprite
         do Memory.poke(memAddress -352, 7196);
         do Memory.poke(memAddress -320, 9790);
         do Memory.poke(memAddress -288, 28543);
@@ -95,6 +103,7 @@ class PrizeGenerator {
         do Memory.poke(memAddress -64, 992);
         do Memory.poke(memAddress -32, 448);
         do Memory.poke(memAddress, 128);
+
         return;
     }
 
@@ -115,6 +124,7 @@ class PrizeGenerator {
         do Memory.poke(memAddress -64, 0);
         do Memory.poke(memAddress -32, 0);
         do Memory.poke(memAddress, 0);
+
         return;
     }
 

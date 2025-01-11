@@ -6,19 +6,21 @@ class StepManager {
     field StepGenerator step5;
     field StepGenerator step6;
     field int spacing;  // Horizontal spacing between steps
-    
+    field StepGenerator lastCollidedStep;  // Track which step we last collided with
+
     constructor StepManager new(int startX, int startY) {
-        let spacing = 150;  // Space between each step
-        
-        // Create all steps with increasing X positions
-        let step1 = StepGenerator.new(startX, startY);
-        let step2 = StepGenerator.new(startX + spacing, startY);
-        let step3 = StepGenerator.new(startX + (spacing * 2), startY);
-        let step4 = StepGenerator.new(startX + (spacing * 3), startY);
-        let step5 = StepGenerator.new(startX + (spacing * 4), startY);
-        let step6 = StepGenerator.new(startX + (spacing * 5), startY);
-        
-        return this;
+    let spacing = 80;  // Reduced spacing between steps
+    
+    // Create all steps with increasing X positions
+    let step1 = StepGenerator.new(70, 200);               // Leftmost
+    let step2 = StepGenerator.new(70 + spacing, 180);     // Second
+    let step3 = StepGenerator.new(70 + (spacing * 2), 210); // Third
+    let step4 = StepGenerator.new(70 + (spacing * 3), 120); // Fourth
+    let step5 = StepGenerator.new(70 + (spacing * 4), 180); // Fifth
+    let step6 = StepGenerator.new(70 + (spacing * 5), 150); // Rightmost
+    
+    let lastCollidedStep = step1;
+    return this;
     }
     
     method void startMoving() {
@@ -30,6 +32,7 @@ class StepManager {
         do step6.startMoving();
         return;
     }
+
     
     method void update() {
         do step1.update();
@@ -39,6 +42,11 @@ class StepManager {
         do step5.update();
         do step6.update();
         return;
+    }
+
+    method boolean isMoving() {
+    // Since all steps move together, we check any one of them
+    return step1.isMoving();
     }
     
     method boolean isStandingOnAny(int objectX, int objectWidth, int objectBottomY) {

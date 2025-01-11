@@ -4,7 +4,8 @@ class PrizeGenerator {
     field int radius;           // Radius for collision detection
     field boolean isMoving;     // Movement state
     field int width, height;    // Dimensions of the prize
-    field int oldLocation, newLocation; // For erasing and redrawing
+    field int oldLocation, newLocation; // For erasing and redrawing\
+    field int rand123;
 
     constructor PrizeGenerator new(int startX, int startY) {
         // Initialize fields
@@ -18,22 +19,43 @@ class PrizeGenerator {
         do LCGRandom.setSeed(1234);
 
         // Randomize the position of the prize
-        let middleX = LCGRandom.randRange(startX - 50, startX + 50);
-        let middleY = LCGRandom.randRange(startY - 10, startY + 10);
+        // Randomize the position of the prize
+        let middleX = LCGRandom.randRange(6500, 6000);  // Horizontal position near the right edge
+        let middleY = LCGRandom.randRange(220, 240); // Vertical position around the middle
 
-        // Debug: Print randomized coordinates
-        do Output.printString("middleX: ");
-        do Output.printInt(middleX);
-        do Output.printString(", middleY: ");
-        do Output.printInt(middleY);
-        do Output.printString("\n");
 
-        // Calculate memory location and draw the heart
+        // Calculate memory location
         let newLocation = getMemLocation();
-        do drawHeart(600);
-
-        return this;
     }
+
+    method void generateRandomPrize() {
+        while (true) {
+            do Sys.wait(1500);  // Delay to control prize generation frequency
+
+            // Generate random X coordinate and random prize type
+            let oldLocation = LCGRandom.randRange(5500, 5000);  // Horizontal position near right edge
+            let rand123 = LCGRandom.randRange(0, 2);          // Random prize type
+
+            // Randomize vertical position for variety
+            let middleY = LCGRandom.randRange(120, 136);
+
+            // Draw the prize and start movement
+            if (rand123 = 0) {
+                do drawHeart(oldLocation);
+            } 
+            if (rand123 = 1) {
+                do drawSnowflake(oldLocation);
+            } 
+            if (rand123 = 2) {
+                do drawSpider(oldLocation);
+            }
+
+            // Start moving the prize
+            do startMoving();
+        }
+        return;
+    }
+
 
     method int getMemLocation() {
         // Convert (middleX, middleY) to memory location
@@ -45,28 +67,57 @@ class PrizeGenerator {
         return;
     }
 
+    method void erasePrize(int location, int rand123) {
+        if (rand123 = 0) {
+            do eraseHeart(location);
+        } 
+        if (rand123 = 1) {
+            do eraseSnowflake(location);
+        } 
+        if (rand123 = 2) {
+            do eraseSpider(location);
+        }
+        return;
+    }
+
+
     method void update() {
         if (~isMoving) {
             return;  // Don't move if not active
         }
 
-        // Save the current memory location
-        let oldLocation = getMemLocation();
-
         // Move the prize left by 1 pixel
         let middleX = middleX - 1;
 
-        // Update the memory location
-        let newLocation = getMemLocation();
+        // Stop moving if it reaches the left side of the screen
+        if (middleX < 0) {
+            let isMoving = false;
+            return;
+        }
 
-        // Erase the prize at the old location and redraw at the new location
-        if (~(oldLocation = newLocation)) {
-            do eraseHeart(oldLocation);
+        // Update memory location
+        let oldLocation = newLocation;  // Save the previous location
+        let newLocation = getMemLocation();  // Get the updated memory location
+
+        // Erase the prize at the old location
+        do erasePrize(oldLocation, rand123);
+
+        // Redraw the prize at the new location
+        if (rand123 = 0) {
             do drawHeart(newLocation);
+        } 
+        if (rand123 = 1) {
+            do drawSnowflake(newLocation);
+        } 
+        if (rand123 = 2) {
+            do drawSpider(newLocation);
         }
 
         return;
     }
+
+
+    
 
     method boolean checkCollection(int princessX, int princessY) {
         // Check if the princess is within the radius of the prize
@@ -127,6 +178,160 @@ class PrizeGenerator {
 
         return;
     }
+
+    method void drawSpider(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		do Memory.poke(memAddress -320, -456);
+		do Memory.poke(memAddress -352, 0);
+		do Memory.poke(memAddress -288, -1588);
+		do Memory.poke(memAddress -256, 28804);
+		do Memory.poke(memAddress -224, 29888);
+		do Memory.poke(memAddress -192, -1572);
+		do Memory.poke(memAddress -160, -26);
+		do Memory.poke(memAddress -128, -62);
+		do Memory.poke(memAddress -96, -80);
+		do Memory.poke(memAddress -64, -232);
+		do Memory.poke(memAddress -32, -30516);
+		do Memory.poke(memAddress, 1124);
+		do Memory.poke(memAddress +32, 32);
+		do Memory.poke(memAddress -319, 227);
+		do Memory.poke(memAddress -351, 0);
+		do Memory.poke(memAddress -287, 412);
+		do Memory.poke(memAddress -255, 264);
+		do Memory.poke(memAddress -223, 25);
+		do Memory.poke(memAddress -191, 476);
+		do Memory.poke(memAddress -159, 831);
+		do Memory.poke(memAddress -127, 543);
+		do Memory.poke(memAddress -95, 111);
+		do Memory.poke(memAddress -63, 199);
+		do Memory.poke(memAddress -31, 408);
+		do Memory.poke(memAddress +1, 305);
+		do Memory.poke(memAddress +33, 32);
+		return;
+	}
+
+	method void eraseSpider(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		do Memory.poke(memAddress -320, 0);
+		do Memory.poke(memAddress -352, 0);
+		do Memory.poke(memAddress -288, 0);
+		do Memory.poke(memAddress -256, 0);
+		do Memory.poke(memAddress -224, 0);
+		do Memory.poke(memAddress -192, 0);
+		do Memory.poke(memAddress -160, 0);
+		do Memory.poke(memAddress -128, 0);
+		do Memory.poke(memAddress -96, 0);
+		do Memory.poke(memAddress -64, 0);
+		do Memory.poke(memAddress -32, 0);
+		do Memory.poke(memAddress, 0);
+		do Memory.poke(memAddress +32, 0);
+		do Memory.poke(memAddress -319, 0);
+		do Memory.poke(memAddress -351, 0);
+		do Memory.poke(memAddress -287, 0);
+		do Memory.poke(memAddress -255, 0);
+		do Memory.poke(memAddress -223, 0);
+		do Memory.poke(memAddress -191, 0);
+		do Memory.poke(memAddress -159, 0);
+		do Memory.poke(memAddress -127, 0);
+		do Memory.poke(memAddress -95, 0);
+		do Memory.poke(memAddress -63, 0);
+		do Memory.poke(memAddress -31, 0);
+		do Memory.poke(memAddress +1, 0);
+		do Memory.poke(memAddress +33, 0);
+		return;
+	}
+
+	method void drawSnowflake(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		// column 0
+		do Memory.poke(memAddress -704, 2048);
+		do Memory.poke(memAddress -672, 10752);
+		do Memory.poke(memAddress -640, 7168);
+		do Memory.poke(memAddress -608, 2088);
+		do Memory.poke(memAddress -576, 10800);
+		do Memory.poke(memAddress -544, 7224);
+		do Memory.poke(memAddress -512, 18752);
+		do Memory.poke(memAddress -480, -13952);
+		do Memory.poke(memAddress -448, -13888);
+		do Memory.poke(memAddress -416, 10258);
+		do Memory.poke(memAddress -384, 7204);
+		do Memory.poke(memAddress -352, -1);
+		do Memory.poke(memAddress -320, 7204);
+		do Memory.poke(memAddress -288, 10770);
+		do Memory.poke(memAddress -256, -13888);
+		do Memory.poke(memAddress -224, -13952);
+		do Memory.poke(memAddress -192, 18752);
+		do Memory.poke(memAddress -160, 7224);
+		do Memory.poke(memAddress -128, 10800);
+		do Memory.poke(memAddress -96, 2088);
+		do Memory.poke(memAddress -64, 7168);
+		do Memory.poke(memAddress -32, 10752);
+		do Memory.poke(memAddress, 2048);
+		// column 1
+		do Memory.poke(memAddress -607, 10);
+		do Memory.poke(memAddress -575, 6);
+		do Memory.poke(memAddress -543, 14);
+		do Memory.poke(memAddress -511, 1);
+		do Memory.poke(memAddress -447, 1);
+		do Memory.poke(memAddress -415, 36);
+		do Memory.poke(memAddress -383, 18);
+		do Memory.poke(memAddress -351, 127);
+		do Memory.poke(memAddress -319, 18);
+		do Memory.poke(memAddress -287, 36);
+		do Memory.poke(memAddress -255, 1);
+		do Memory.poke(memAddress -191, 1);
+		do Memory.poke(memAddress -159, 14);
+		do Memory.poke(memAddress -127, 6);
+		do Memory.poke(memAddress -95, 10);
+		return;
+	}
+
+	method void eraseSnowflake(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		do Memory.poke(memAddress -704, 0);
+		do Memory.poke(memAddress -672, 0);
+		do Memory.poke(memAddress -640, 0);
+		do Memory.poke(memAddress -608, 0);
+		do Memory.poke(memAddress -576, 0);
+		do Memory.poke(memAddress -544, 0);
+		do Memory.poke(memAddress -512, 0);
+		do Memory.poke(memAddress -480, 0);
+		do Memory.poke(memAddress -448, 0);
+		do Memory.poke(memAddress -416, 0);
+		do Memory.poke(memAddress -384, 0);
+		do Memory.poke(memAddress -352, 0);
+		do Memory.poke(memAddress -320, 0);
+		do Memory.poke(memAddress -288, 0);
+		do Memory.poke(memAddress -256, 0);
+		do Memory.poke(memAddress -224, 0);
+		do Memory.poke(memAddress -192, 0);
+		do Memory.poke(memAddress -160, 0);
+		do Memory.poke(memAddress -128, 0);
+		do Memory.poke(memAddress -96, 0);
+		do Memory.poke(memAddress -64, 0);
+		do Memory.poke(memAddress -32, 0);
+		do Memory.poke(memAddress, 0);
+		do Memory.poke(memAddress -607, 0);
+		do Memory.poke(memAddress -575, 0);
+		do Memory.poke(memAddress -543, 0);
+		do Memory.poke(memAddress -511, 0);
+		do Memory.poke(memAddress -447, 0);
+		do Memory.poke(memAddress -415, 0);
+		do Memory.poke(memAddress -383, 0);
+		do Memory.poke(memAddress -351, 0);
+		do Memory.poke(memAddress -319, 0);
+		do Memory.poke(memAddress -287, 0);
+		do Memory.poke(memAddress -255, 0);
+		do Memory.poke(memAddress -191, 0);
+		do Memory.poke(memAddress -159, 0);
+		do Memory.poke(memAddress -127, 0);
+		do Memory.poke(memAddress -95, 0);
+		return;
+	}
 
     method void dispose() {
         do Memory.deAlloc(this);

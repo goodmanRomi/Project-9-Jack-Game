@@ -1,4 +1,5 @@
 class Princess {
+<<<<<<< Updated upstream
     field int xPos, yPos;    // Position
 	field int initialX;
     field int width, height;  // Dimensions
@@ -11,8 +12,20 @@ class Princess {
 	field Wave wave;
 	//smoother walking
 	field int balanceX;
+=======
+	/*
+    field int xPos, yPos;     // Position
+    field int yVel;          // Vertical velocity
+    field int position;      // Screen position
+    field int skin;          // Animation frame
+    field int tick;          // Internal clock
+    field boolean gravity;   // Gravity state
+    field boolean animation_direction_up; // Animation state
+    field StepGenerator step; // Reference to step
+>>>>>>> Stashed changes
 
 
+<<<<<<< Updated upstream
     constructor Princess new(StepManager stepRef) {
     	let wave = Wave.new();
 		let isDead = false;
@@ -261,8 +274,225 @@ class Princess {
     method int getCollisionRight() {
         return getActualX() + width;
     }
+=======
+    constructor Princess new(StepGenerator stepRef) {
+        let step = stepRef;
+        // Initial physics constants
+        let GRAVITY = 3;
+        let JUMP_POWER = -30;
+
+        // Initial position and states
+        let xPos = stepRef.getInitialX();
+        let yPos = stepRef.getInitialY();
+        let yVel = 0;
+        let position = (xPos + (32 * yPos));
+        let skin = 0;
+        let tick = 0;
+        let gravity = false;
+        let animation_direction_up = true;
+
+        // Draw the initial princess position
+        do drawPrincess(position);
+
+        return this;
+    }
+
+>>>>>>> Stashed changes
     method void dispose() {
         do Memory.deAlloc(this);
         return;
     }
+<<<<<<< Updated upstream
 }
+=======
+
+    method void jump() {
+        let yVel = JUMP_POWER;
+        if (~gravity) {
+            let gravity = true;
+        }
+        return;
+    }
+
+    method void tick() {
+        // Update skin and gravity every few ticks
+        let tick = tick + 1;
+        if (tick = 5) {
+            let tick = 0;
+            let skin = skin + 1;
+            if (yVel < 6) {
+                let yVel = yVel + GRAVITY;
+            }
+            if (skin = 4) {
+                let skin = 0;
+            }
+        }
+
+        // Apply gravity to position (if on)
+        if (gravity) {
+            if (yVel > 0) {
+                if (yPos < (221 - yVel)) {
+                    let yPos = yPos + yVel;
+                    let position = position + (yVel * 32);
+                }
+            } else {
+                if (yPos > -yVel) {
+                    let yPos = yPos + yVel;
+                    let position = position + (yVel * 32);
+                } else {
+                    let yVel = 0;
+                }
+            }
+        } else { // Apply animation when gravity is off
+            if (animation_direction_up) {
+                if (tick = 1) {
+                    let yPos = yPos - 1;
+                    let position = position - 32;
+                    if (yPos < 118) {
+                        let animation_direction_up = false;
+                    }
+                }
+            } else {
+                if (tick = 1) {
+                    let yPos = yPos + 1;
+                    let position = position + 32;
+                    if (yPos > 138) {
+                        let animation_direction_up = true;
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    method void render() {
+        if (skin = 0) {
+            do drawPrincess(position);
+        } else if (skin = 1) {
+            do drawPrincess(position);
+        } else if (skin = 2) {
+            do drawPrincess(position);
+        } else if (skin = 3) {
+            do drawPrincess(position);
+        }
+        return;
+    }
+
+    method void update() {
+        do tick();
+        do render();
+        return;
+    }
+
+    method int x() {
+        return xPos;
+    }
+
+    method int y() {
+        return yPos;
+    }
+
+    method void reset() {
+        let xPos = step.getInitialX();
+        let yPos = step.getInitialY();
+        let yVel = 0;
+        let position = (xPos + (32 * yPos));
+        let skin = 0;
+        let tick = 0;
+        let gravity = false;
+        let animation_direction_up = true;
+        return;
+    }
+
+    method void drawPrincess(int location) {
+        var int memAddress; 
+        let memAddress = 16384 + location;
+        // column 0
+        do Memory.poke(memAddress -704, 17472);
+        do Memory.poke(memAddress -672, 27328);
+        do Memory.poke(memAddress -640, 20800);
+        do Memory.poke(memAddress -608, 16448);
+        do Memory.poke(memAddress -576, 16448);
+        do Memory.poke(memAddress -544, -32);
+        do Memory.poke(memAddress -512, -16);
+        do Memory.poke(memAddress -480, -3592);
+        do Memory.poke(memAddress -448, -32712);
+        do Memory.poke(memAddress -416, 8328);
+        do Memory.poke(memAddress -384, 24);
+        do Memory.poke(memAddress -352, 3608);
+        do Memory.poke(memAddress -320, -16264);
+        do Memory.poke(memAddress -288, -4);
+        do Memory.poke(memAddress -256, -4);
+        do Memory.poke(memAddress -224, 28);
+        do Memory.poke(memAddress -192, 24799);
+        do Memory.poke(memAddress -160, 12687);
+        do Memory.poke(memAddress -128, 4367);
+        do Memory.poke(memAddress -96, 8);
+        do Memory.poke(memAddress -64, -8);
+        do Memory.poke(memAddress -32, 4352);
+        do Memory.poke(memAddress, 4352);
+        // column 1
+        do Memory.poke(memAddress -511, 1);
+        do Memory.poke(memAddress -479, 3);
+        do Memory.poke(memAddress -447, 3);
+        do Memory.poke(memAddress -415, 2);
+        do Memory.poke(memAddress -383, 3);
+        do Memory.poke(memAddress -351, 3);
+        do Memory.poke(memAddress -319, 3);
+        do Memory.poke(memAddress -287, 7);
+        do Memory.poke(memAddress -255, 7);
+        do Memory.poke(memAddress -223, 7);
+        do Memory.poke(memAddress -191, 31);
+        do Memory.poke(memAddress -159, 30);
+        do Memory.poke(memAddress -127, 30);
+        do Memory.poke(memAddress -95, 2);
+        do Memory.poke(memAddress -63, 3);
+        return;
+    }
+
+    method void erasePrincess(int location) {
+        var int memAddress; 
+        let memAddress = 16384 + location;
+        do Memory.poke(memAddress -704, 0);
+        do Memory.poke(memAddress -672, 0);
+        do Memory.poke(memAddress -640, 0);
+        do Memory.poke(memAddress -608, 0);
+        do Memory.poke(memAddress -576, 0);
+        do Memory.poke(memAddress -544, 0);
+        do Memory.poke(memAddress -512, 0);
+        do Memory.poke(memAddress -480, 0);
+        do Memory.poke(memAddress -448, 0);
+        do Memory.poke(memAddress -416, 0);
+        do Memory.poke(memAddress -384, 0);
+        do Memory.poke(memAddress -352, 0);
+        do Memory.poke(memAddress -320, 0);
+        do Memory.poke(memAddress -288, 0);
+        do Memory.poke(memAddress -256, 0);
+        do Memory.poke(memAddress -224, 0);
+        do Memory.poke(memAddress -192, 0);
+        do Memory.poke(memAddress -160, 0);
+        do Memory.poke(memAddress -128, 0);
+        do Memory.poke(memAddress -96, 0);
+        do Memory.poke(memAddress -64, 0);
+        do Memory.poke(memAddress -32, 0);
+        do Memory.poke(memAddress, 0);
+        do Memory.poke(memAddress -511, 0);
+        do Memory.poke(memAddress -479, 0);
+        do Memory.poke(memAddress -447, 0);
+        do Memory.poke(memAddress -415, 0);
+        do Memory.poke(memAddress -383, 0);
+        do Memory.poke(memAddress -351, 0);
+        do Memory.poke(memAddress -319, 0);
+        do Memory.poke(memAddress -287, 0);
+        do Memory.poke(memAddress -255, 0);
+        do Memory.poke(memAddress -223, 0);
+        do Memory.poke(memAddress -191, 0);
+        do Memory.poke(memAddress -159, 0);
+        do Memory.poke(memAddress -127, 0);
+        do Memory.poke(memAddress -95, 0);
+        do Memory.poke(memAddress -63, 0);
+        return;
+    }
+	*/
+}
+>>>>>>> Stashed changes

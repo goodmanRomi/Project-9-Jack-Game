@@ -1,7 +1,7 @@
 class Main {
     function void main() {
         var Wave wave;
-        var StepGenerator stepGen1, stepGen2, stepGen3, stepGen4, stepGen5, stepGen6;
+        var StepManager stepManager;
         var Princess princess;
         var boolean exit;
         var int i;
@@ -9,13 +9,8 @@ class Main {
         var int stepCounter;    // Counter for step movement timing
 
         let wave = Wave.new();
-        let stepGen1 = StepGenerator.new(70, 200);    // First step
-        let stepGen2 = StepGenerator.new(155, 180);   // ~512/6 spacing
-        let stepGen3 = StepGenerator.new(240, 160);
-        let stepGen4 = StepGenerator.new(325, 180);
-        let stepGen5 = StepGenerator.new(410, 160);
-        let stepGen6 = StepGenerator.new(495, 180);
-        let princess = Princess.new(stepGen1);
+        let stepManager = StepManager.new(70, 200);    // First step
+        let princess = Princess.new(stepManager);
         let prizeGen = PrizeGenerator.new(300, 150);  // Initialize prize generator
 
         let exit = false;
@@ -24,23 +19,13 @@ class Main {
         while ((~(exit)) & (~(princess.isDead()))) { 
             // Check for Enter key (key code 128)
             if (Keyboard.keyPressed() = 128) {
-                do stepGen1.startMoving();
-                do stepGen2.startMoving();
-                do stepGen3.startMoving();
-                do stepGen4.startMoving();
-                do stepGen5.startMoving();
-                do stepGen6.startMoving();
+                do stepManager.startMoving();
                 do prizeGen.startMoving();  // Start the prize generator
             }
 
             do wave.updateWave();
             do princess.update();
-            do stepGen1.update(); // Steps move left
-            do stepGen2.update();
-            do stepGen3.update();
-            do stepGen4.update();
-            do stepGen5.update();
-            do stepGen6.update();
+            do stepManager.update(); // Steps move left
             do prizeGen.update();  // Update prize movement
             do Sys.wait(16);  // Base game delay
     
@@ -51,12 +36,7 @@ class Main {
 
         do wave.dispose();
         do princess.dispose();
-        do stepGen1.dispose();
-        do stepGen2.dispose();
-        do stepGen3.dispose();
-        do stepGen4.dispose();
-        do stepGen5.dispose();
-        do stepGen6.dispose();
+        do stepManager.dispose();
         do prizeGen.dispose();
 
         return;

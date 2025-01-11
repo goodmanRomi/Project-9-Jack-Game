@@ -1,35 +1,19 @@
 class Princess {
-<<<<<<< HEAD
     field int xPos, yPos;    // Position
 	field int initialX;
     field int width, height;  // Dimensions
     field int xVel;
     field int yVel;          // Vertical velocity
     field boolean isJumping;
-    field StepGenerator step; // Reference to our step
+    field StepManager step; // Reference to our step
     field boolean isDead;
 	field boolean onPlatform;
 	field Wave wave;
-
 	//smoother walking
 	field int balanceX;
-=======
-    field int xPos, yPos;     // Position
-    field int yVel;          // Vertical velocity
-    field int position;      // Screen position
-    field int skin;          // Animation frame
-    field int tick;          // Internal clock
-    field boolean gravity;   // Gravity state
-    field boolean animation_direction_up; // Animation state
-    field StepGenerator step; // Reference to step
->>>>>>> 31c59f8 (Preserve changes to PrizeGenerator.jack before merging)
 
-    // Constants
-    field int GRAVITY;
-    field int JUMP_POWER;
 
-    constructor Princess new(StepGenerator stepRef) {
-<<<<<<< HEAD
+    constructor Princess new(StepManager stepRef) {
     	let wave = Wave.new();
 		let isDead = false;
 		let step = stepRef;
@@ -42,54 +26,45 @@ class Princess {
       	let balanceX = 0;
 		// Initial position on the step
         let xPos = initialX; // Center on step
-        let yPos = stepRef.getTopY()-1;      // Stand on top
+        let yPos = stepRef.isStandingOnAny(xPos, width, yPos-1);      // Stand on top
         let yVel = 0;
 		let xVel = 0;
         let isJumping = false;
 		let onPlatform = true;
         // Draw initial position
         do drawPrincess(getMemLocation());
-=======
-        let step = stepRef;
-        // Initial physics constants
-        let GRAVITY = 3;
-        let JUMP_POWER = -30;
-
-        // Initial position and states
-        let xPos = stepRef.getInitialX();
-        let yPos = stepRef.getInitialY();
-        let yVel = 0;
-        let position = (xPos + (32 * yPos));
-        let skin = 0;
-        let tick = 0;
-        let gravity = false;
-        let animation_direction_up = true;
-
-        // Draw the initial princess position
-        do drawPrincess(position);
->>>>>>> 31c59f8 (Preserve changes to PrizeGenerator.jack before merging)
-
         return this;
     }
-
-<<<<<<< HEAD
     method int getMemLocation() {
         return ((yPos * 32) + (xPos / 16));
     }
-
     method void update() {
-		var int oldLocation, newLocation;
-
+		var int oldLocation, newLocation, nextPos, currentKey;
 		let oldLocation = getMemLocation();
-		do handleMovement();
+		let currentKey = Keyboard.keyPressed();
+
+        do handleMovement();
+
+        // If no movement keys are pressed, move with platform
+        if (step.isStandingOnAny(xPos, width, yPos-1) & step.isMoving()) {
+               if (~(currentKey = 130) & ~(currentKey = 132) & ~(currentKey = 32)){
+                let nextPos = xPos-1;
+                //only move if not at screen boundry
+                if (nextPos>0){
+                    let xPos = nextPos; // Move left with platform speed
+                }
+            }               
+        }
+
     	do princessMovement();
-        
+
     // Drawing update
     let newLocation = getMemLocation();
 	if (~(oldLocation = newLocation)) { 
 		do erasePrincess(oldLocation);    // Use your erase method
         do drawPrincess(newLocation);     // Draw at new position
         }
+  
         return;
     }
     
@@ -105,6 +80,7 @@ class Princess {
     return;
 	}
 
+  
 	method void moveRight() {        
     var int oldLocation, newLocation;
     let oldLocation = getMemLocation();
@@ -116,8 +92,8 @@ class Princess {
     }
     return;
 	}
-	
-	
+
+
 	method void handleMovement() {
     if ((Keyboard.keyPressed() = 130)) {  // Left arrow
         do moveleft(); 
@@ -128,18 +104,15 @@ class Princess {
     return;
 	}
 
-	//check where i am using
     method int getActualX() {
         return (initialX + Math.multiply(balanceX, 16) + 16);
     }
-
+  
    method void princessMovement(){
-		var int originaldy;
-		var int footPosition; //track foot position 
-		
-		let onPlatform = false;
-    	if (step.isStandingOn(xPos, width, yPos-1)) { 
+        let onPlatform = false;
+    	if (step.isStandingOnAny(xPos, width, yPos-1)) { 
 		let onPlatform = true; 
+
 		} else {
         // If not on platform and not already jumping/falling, start falling
         if (~isJumping) {
@@ -164,7 +137,7 @@ class Princess {
             }
 		}
 		if (yVel > 0) {
-			if (step.isStandingOn(xPos, width, yPos + yVel)){
+			if (step.isStandingOnAny(xPos, width, yPos + yVel)){
 			let isJumping = false;
 			let yVel = 0;
 			let yPos = step.getTopY()-1;
@@ -173,7 +146,7 @@ class Princess {
 		} let xPos = xPos + xVel; 
 
 		// Check if walked off platform
-        if ((~isJumping) & (~(step.isStandingOn(xPos, width, yPos)))) {
+        if ((~isJumping) & (~(step.isStandingOnAny(xPos, width, yPos)))) {
             let isJumping = true;
 			let onPlatform = false;  // Start falling if no platform below
             let yVel = 0;  // Start fall from rest
@@ -181,7 +154,6 @@ class Princess {
 
 		return;
 	}
-
 
     method void drawPrincess(int location) {
         var int memAddress; 
@@ -228,7 +200,6 @@ class Princess {
 		do Memory.poke(memAddress -63, 3);
 		return;
 	}
-
     method void erasePrincess(int location) {
 		var int memAddress; 
 		let memAddress = 16384+location;
@@ -278,215 +249,20 @@ class Princess {
 		return true;
 	} return false;
 	}
-
 	method int getCollisionTop() {
         return yPos;
     }
-
     method int getCollisionBottom() {
         return yPos + height;
     }
-
     method int getCollisionLeft() {
         return getActualX();
     }
-
     method int getCollisionRight() {
         return getActualX() + width;
     }
-
-=======
->>>>>>> 31c59f8 (Preserve changes to PrizeGenerator.jack before merging)
     method void dispose() {
         do Memory.deAlloc(this);
-        return;
-    }
-
-    method void jump() {
-        let yVel = JUMP_POWER;
-        if (~gravity) {
-            let gravity = true;
-        }
-        return;
-    }
-
-    method void tick() {
-        // Update skin and gravity every few ticks
-        let tick = tick + 1;
-        if (tick = 5) {
-            let tick = 0;
-            let skin = skin + 1;
-            if (yVel < 6) {
-                let yVel = yVel + GRAVITY;
-            }
-            if (skin = 4) {
-                let skin = 0;
-            }
-        }
-
-        // Apply gravity to position (if on)
-        if (gravity) {
-            if (yVel > 0) {
-                if (yPos < (221 - yVel)) {
-                    let yPos = yPos + yVel;
-                    let position = position + (yVel * 32);
-                }
-            } else {
-                if (yPos > -yVel) {
-                    let yPos = yPos + yVel;
-                    let position = position + (yVel * 32);
-                } else {
-                    let yVel = 0;
-                }
-            }
-        } else { // Apply animation when gravity is off
-            if (animation_direction_up) {
-                if (tick = 1) {
-                    let yPos = yPos - 1;
-                    let position = position - 32;
-                    if (yPos < 118) {
-                        let animation_direction_up = false;
-                    }
-                }
-            } else {
-                if (tick = 1) {
-                    let yPos = yPos + 1;
-                    let position = position + 32;
-                    if (yPos > 138) {
-                        let animation_direction_up = true;
-                    }
-                }
-            }
-        }
-        return;
-    }
-
-    method void render() {
-        if (skin = 0) {
-            do drawPrincess(position);
-        } else if (skin = 1) {
-            do drawPrincess(position);
-        } else if (skin = 2) {
-            do drawPrincess(position);
-        } else if (skin = 3) {
-            do drawPrincess(position);
-        }
-        return;
-    }
-
-    method void update() {
-        do tick();
-        do render();
-        return;
-    }
-
-    method int x() {
-        return xPos;
-    }
-
-    method int y() {
-        return yPos;
-    }
-
-    method void reset() {
-        let xPos = step.getInitialX();
-        let yPos = step.getInitialY();
-        let yVel = 0;
-        let position = (xPos + (32 * yPos));
-        let skin = 0;
-        let tick = 0;
-        let gravity = false;
-        let animation_direction_up = true;
-        return;
-    }
-
-    method void drawPrincess(int location) {
-        var int memAddress; 
-        let memAddress = 16384 + location;
-        // column 0
-        do Memory.poke(memAddress -704, 17472);
-        do Memory.poke(memAddress -672, 27328);
-        do Memory.poke(memAddress -640, 20800);
-        do Memory.poke(memAddress -608, 16448);
-        do Memory.poke(memAddress -576, 16448);
-        do Memory.poke(memAddress -544, -32);
-        do Memory.poke(memAddress -512, -16);
-        do Memory.poke(memAddress -480, -3592);
-        do Memory.poke(memAddress -448, -32712);
-        do Memory.poke(memAddress -416, 8328);
-        do Memory.poke(memAddress -384, 24);
-        do Memory.poke(memAddress -352, 3608);
-        do Memory.poke(memAddress -320, -16264);
-        do Memory.poke(memAddress -288, -4);
-        do Memory.poke(memAddress -256, -4);
-        do Memory.poke(memAddress -224, 28);
-        do Memory.poke(memAddress -192, 24799);
-        do Memory.poke(memAddress -160, 12687);
-        do Memory.poke(memAddress -128, 4367);
-        do Memory.poke(memAddress -96, 8);
-        do Memory.poke(memAddress -64, -8);
-        do Memory.poke(memAddress -32, 4352);
-        do Memory.poke(memAddress, 4352);
-        // column 1
-        do Memory.poke(memAddress -511, 1);
-        do Memory.poke(memAddress -479, 3);
-        do Memory.poke(memAddress -447, 3);
-        do Memory.poke(memAddress -415, 2);
-        do Memory.poke(memAddress -383, 3);
-        do Memory.poke(memAddress -351, 3);
-        do Memory.poke(memAddress -319, 3);
-        do Memory.poke(memAddress -287, 7);
-        do Memory.poke(memAddress -255, 7);
-        do Memory.poke(memAddress -223, 7);
-        do Memory.poke(memAddress -191, 31);
-        do Memory.poke(memAddress -159, 30);
-        do Memory.poke(memAddress -127, 30);
-        do Memory.poke(memAddress -95, 2);
-        do Memory.poke(memAddress -63, 3);
-        return;
-    }
-
-    method void erasePrincess(int location) {
-        var int memAddress; 
-        let memAddress = 16384 + location;
-        do Memory.poke(memAddress -704, 0);
-        do Memory.poke(memAddress -672, 0);
-        do Memory.poke(memAddress -640, 0);
-        do Memory.poke(memAddress -608, 0);
-        do Memory.poke(memAddress -576, 0);
-        do Memory.poke(memAddress -544, 0);
-        do Memory.poke(memAddress -512, 0);
-        do Memory.poke(memAddress -480, 0);
-        do Memory.poke(memAddress -448, 0);
-        do Memory.poke(memAddress -416, 0);
-        do Memory.poke(memAddress -384, 0);
-        do Memory.poke(memAddress -352, 0);
-        do Memory.poke(memAddress -320, 0);
-        do Memory.poke(memAddress -288, 0);
-        do Memory.poke(memAddress -256, 0);
-        do Memory.poke(memAddress -224, 0);
-        do Memory.poke(memAddress -192, 0);
-        do Memory.poke(memAddress -160, 0);
-        do Memory.poke(memAddress -128, 0);
-        do Memory.poke(memAddress -96, 0);
-        do Memory.poke(memAddress -64, 0);
-        do Memory.poke(memAddress -32, 0);
-        do Memory.poke(memAddress, 0);
-        do Memory.poke(memAddress -511, 0);
-        do Memory.poke(memAddress -479, 0);
-        do Memory.poke(memAddress -447, 0);
-        do Memory.poke(memAddress -415, 0);
-        do Memory.poke(memAddress -383, 0);
-        do Memory.poke(memAddress -351, 0);
-        do Memory.poke(memAddress -319, 0);
-        do Memory.poke(memAddress -287, 0);
-        do Memory.poke(memAddress -255, 0);
-        do Memory.poke(memAddress -223, 0);
-        do Memory.poke(memAddress -191, 0);
-        do Memory.poke(memAddress -159, 0);
-        do Memory.poke(memAddress -127, 0);
-        do Memory.poke(memAddress -95, 0);
-        do Memory.poke(memAddress -63, 0);
         return;
     }
 }

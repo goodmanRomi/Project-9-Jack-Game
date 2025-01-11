@@ -1,0 +1,81 @@
+class StepManager {
+    field StepGenerator step1;
+    field StepGenerator step2;
+    field StepGenerator step3;
+    field StepGenerator step4;
+    field StepGenerator step5;
+    field StepGenerator step6;
+    field int spacing;  // Horizontal spacing between steps
+    field StepGenerator lastCollidedStep;  // Track which step we last collided with
+
+    constructor StepManager new(int startX, int startY) {
+    let spacing = 80;  // Reduced spacing between steps
+    
+    // Create all steps with increasing X positions
+    let step1 = StepGenerator.new(70, 200);               // Leftmost
+    let step2 = StepGenerator.new(70 + spacing, 180);     // Second
+    let step3 = StepGenerator.new(70 + (spacing * 2), 210); // Third
+    let step4 = StepGenerator.new(70 + (spacing * 3), 120); // Fourth
+    let step5 = StepGenerator.new(70 + (spacing * 4), 180); // Fifth
+    let step6 = StepGenerator.new(70 + (spacing * 5), 150); // Rightmost
+    
+    let lastCollidedStep = step1;
+    return this;
+    }
+    
+    method void startMoving() {
+        do step1.startMoving();
+        do step2.startMoving();
+        do step3.startMoving();
+        do step4.startMoving();
+        do step5.startMoving();
+        do step6.startMoving();
+        return;
+    }
+
+    
+    method void update() {
+        do step1.update();
+        do step2.update();
+        do step3.update();
+        do step4.update();
+        do step5.update();
+        do step6.update();
+        return;
+    }
+
+    method boolean isMoving() {
+    // Since all steps move together, we check any one of them
+    return step1.isMoving();
+    }
+    
+    method boolean isStandingOnAny(int objectX, int objectWidth, int objectBottomY) {
+        // Check each step individually
+        if (step1.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        if (step2.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        if (step3.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        if (step4.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        if (step5.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        if (step6.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        return false;
+    }
+    
+    method int getInitialX() {
+        return step1.getInitialX();  // Use first step for initial position
+    }
+    
+    method int getTopY() {
+        return step1.getTopY();  // Use first step for Y position
+    }
+    
+    method void dispose() {
+        do step1.dispose();
+        do step2.dispose();
+        do step3.dispose();
+        do step4.dispose();
+        do step5.dispose();
+        do step6.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

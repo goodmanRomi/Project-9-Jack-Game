@@ -4,8 +4,8 @@ class StepGenerator {
     field int location;    // Left x-coordinate of the step
     field int destroy_location;
     field boolean isMoving;
-    field int xStart;  // Add initial x position
-    field int yStart;  // Add initial y position
+    field int xStart;  //  initial x position
+    field int yStart;  //  initial y position
     
     // Top-left corner of collision box
     field int tl0x;
@@ -25,7 +25,7 @@ class StepGenerator {
         let rightmost = 40;
         let isGrowing = false;
         let isMoving = false;  // Start with no movement
-        let growthProgress = 0;
+        let growthProgress = width;
         let br0x = LCGRandom.randRange(100, 400);
         let tl0y = LCGRandom.randRange(150, 205);
         let width = 70;
@@ -42,7 +42,6 @@ class StepGenerator {
     
     method void createInitialStep(int startX, int startY) {
     let width = 70;
-    // Position roughly in middle of screen
     let br0x = startX;  
     let tl0y = startY;  
     let tl0x = br0x - width;  // Calculate left edge
@@ -67,6 +66,7 @@ class StepGenerator {
         return;
     }
 
+
     method void reset() {
         var int randHeight;
 
@@ -84,16 +84,18 @@ class StepGenerator {
          //Position the step on the left part 
         let br0x = 511;
         let tl0y = randHeight;
-        let tl0x = br0x - width;
         let br0y = tl0y + 1;
         
+        let isGrowing=true;
+        let tl0x = br0x; // Start with left edge at same position as right edge
+
         //Update the rightmost step
         let rightmost = br0x;
         
         //Set the destroy location
-        let destroy_location = 0; 
         let location = br0x;
-
+        let destroy_location = 0; 
+        
         //Initialize growing state
         let isGrowing = false;
         let growthProgress = width;
@@ -132,7 +134,8 @@ class StepGenerator {
                 do Screen.setColor(true);
                 do Screen.drawRectangle(Math.max(0, tl0x), tl0y, Math.min(511, br0x), br0y);
                 return;
-            } else {
+            
+            } if (growthProgress > width) {
                 let isGrowing = false;
             }
         }
@@ -167,39 +170,29 @@ class StepGenerator {
     }
 
 
-     method int getTopY() {
-        return tl0y;
-    }
-
-    method int getBottomY() {
-        return br0y;
-    }
+    method int getTopY() { return tl0y; }
+    method int getBottomY() { return br0y; }
+    method int getLeftX() { return tl0x; }
+    method int getRightX() { return br0x; }
+    method int getWidth() { return width; }
+    method boolean isMoving() { return isMoving; }
+    method boolean getStandingY(){return tl0y;}
     
-    method int getLeftX() {
-        return tl0x;
-    }
-
-    method int getRightX() {
-        return br0x;
-    }
-
-    method int getWidth() {
-        return width;
-    }
-    
-
-    method int getStandingY() {
-        return tl0y;  // Position character right above the step
-    }
 
     method boolean isStandingOn(int objectX, int objectWidth, int objectBottomY) {
     var int objectLeft, objectRight;
     var int stepTop, stepBottom;
+
+    //if step is growing- we dont need to check position
+    if (isGrowing){
+        return false;
+    } 
+
     let objectLeft = objectX;
     let objectRight = objectX + objectWidth;
     let stepTop = tl0y - 2;  // Add small tolerance above step
     let stepBottom = tl0y + 2;  // Add small tolerance below step
-
+    
     // First check vertical position (similar to Trex implementation)
         if (~(objectBottomY > stepTop & objectBottomY < stepBottom)) { 
         return false; 

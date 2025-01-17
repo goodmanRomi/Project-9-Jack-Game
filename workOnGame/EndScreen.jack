@@ -1,0 +1,104 @@
+class EndScreen {
+    
+    field PrizeGenerator sprites;
+    field Princess princess;
+    field int finalScore;
+    
+    
+    constructor EndScreen new(int score) {
+        let sprites = PrizeGenerator.new(0, 0);
+        let finalScore = score;
+        return this;
+    }
+
+    /** Shows game over screen and handles input */
+    method boolean showGameOver() {
+        var boolean break;
+        var int key;
+        var String text;
+        
+        do Screen.clearScreen();
+        
+        do princess.drawPrincess(3072);  // Position princess lower on screen
+        
+        // Display Game Over text
+        let text = "Game Over!";
+        do sprites.drawSpider(1400);
+        do sprites.drawSnowflake(500);
+        do princess.drawPrincess(8200);
+        do sprites.drawHeart(7900);
+        do sprites.drawSnowflake(8400);
+        do Output.moveCursor(6, 27);
+        do Output.printString(text);
+        do text.dispose();
+        
+        // Display final score
+        let text = "Final Score: ";
+        do Sys.wait(400);
+        do Output.moveCursor(8, 25);
+        do Output.printString(text);
+        do Output.printInt(finalScore);
+        do text.dispose();
+        
+        // Display achievements based on score
+        if (finalScore > 100) {
+            let text = "Amazing parkour skills!";
+            do Output.moveCursor(10, 23);
+            do Output.printString(text);
+            do text.dispose();
+        }
+        else {
+            if (finalScore > 50) {
+                let text = "Great job!";
+                do Output.moveCursor(10, 26);
+                do Output.printString(text);
+                do text.dispose();
+            }
+            else {
+                let text = "Keep practicing!";
+                do Output.moveCursor(10, 25);
+                do Output.printString(text);
+                do text.dispose();
+                do Sys.wait(400);
+            }
+        }
+        
+        // Display prompt
+        let text = "Press SPACE to play again, Q to quit";
+        do sprites.drawHeart(6350);
+        do Sys.wait(400);
+        do sprites.drawSnowflake(500);
+        do Output.moveCursor(20, 20);
+        do Output.printString(text);
+        do text.dispose();
+        
+        do sprites.drawHeart(1000);
+        do sprites.drawSnowflake(1200);
+        
+        while (~(Keyboard.keyPressed() = 0)) {}
+        do Sys.wait(100);
+        
+        let break = false;
+        while (~break) {
+            let key = Keyboard.keyPressed();
+            if ((key = 32) | (key = 81)) {  // SPACE or Q
+                let break = true;
+            }
+            do Sys.wait(50);
+        }
+        
+        // Wait for key release
+        while (~(Keyboard.keyPressed() = 0)) {}
+        
+        // Return true to play again, false to quit
+        return ~(key = 81);  // Return true unless Q was pressed
+    }
+    
+    /** Dispose of the EndScreen */
+    method void dispose() {
+        do sprites.dispose();
+        do princess.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

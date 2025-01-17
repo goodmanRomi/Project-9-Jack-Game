@@ -1,12 +1,13 @@
 class StepGenerator {
-    static int rightmost; // Tracks the rightmost step
     field int width;
     field int location;    // Left x-coordinate of the step
     field int destroy_location;
     field boolean isMoving;
     field int xStart;  //  initial x position
     field int yStart;  //  initial y position
-    
+    field int speed;        // Determines how often the step updates
+    field int frameCounter; // Tracks frames to control speed
+
     // Top-left corner of collision box
     field int tl0x;
     field int tl0y;
@@ -22,7 +23,6 @@ class StepGenerator {
         do LCGRandom.setSeed(1234);  // You can use any non-zero number as seed
         let xStart = startX;
         let yStart = startY;
-        let rightmost = 40;
         let isGrowing = false;
         let isMoving = false;  // Start with no movement
         let growthProgress = width;
@@ -31,7 +31,8 @@ class StepGenerator {
         let width = 70;
         let tl0x = br0x - width;
         let br0y = tl0y + 1;
-    
+        let speed = 2;         // Move every 2 frames
+        let frameCounter = 0;  // Start frame counter at 0
         let location = br0x;
         let destroy_location = 0;
         let growthProgress = width;
@@ -47,7 +48,6 @@ class StepGenerator {
     let tl0x = br0x - width;  // Calculate left edge
     let br0y = tl0y + 1;
     
-    let rightmost = br0x;
     let destroy_location = 0;
     let location = br0x;
     let isGrowing = false;  // Don't grow the initial step
@@ -70,35 +70,27 @@ class StepGenerator {
     method void reset() {
         var int randHeight;
 
-        // Check if this is the first movement after initial step
+        //Check if this is the first movement after initial step
         if (isMoving & (br0x > 0) & (~(br0x > 80))) {  // If we're at initial position
         // Keep current y position and just move left
         return;
         }
 
         let width = 70;
-        
-         //Generate a random height between 150 and 250
         let randHeight = LCGRandom.randRange(150, 205);
 
-         //Position the step on the left part 
+         //Position the step on the right part 
         let br0x = 511;
         let tl0y = randHeight;
         let br0y = tl0y + 1;
         
         let isGrowing=true;
         let tl0x = br0x; // Start with left edge at same position as right edge
+        let growthProgress = 0;
 
-        //Update the rightmost step
-        let rightmost = br0x;
         
-        //Set the destroy location
         let location = br0x;
         let destroy_location = 0; 
-        
-        //Initialize growing state
-        let isGrowing = false;
-        let growthProgress = width;
     
         return;
     }
@@ -119,6 +111,13 @@ class StepGenerator {
             return;
         }
 
+        let frameCounter = frameCounter + 1;
+        if ((frameCounter < speed) > 0) {
+            return; // Skip this frame
+        }
+
+        let frameCounter = 0;
+        
         // Handle growing phase
         if (isGrowing) {
             if (growthProgress < width) {
@@ -157,6 +156,7 @@ class StepGenerator {
         let location = location - 1;
         let tl0x = tl0x - 1;
         let br0x = br0x - 1;
+    
 
         let drawStart = Math.max(0, tl0x);
          // Draw new rectangle, but only the visible part
@@ -182,6 +182,7 @@ class StepGenerator {
     method boolean isStandingOn(int objectX, int objectWidth, int objectBottomY) {
     var int objectLeft, objectRight;
     var int stepTop, stepBottom;
+    var int Tolerance;
 
     //if step is growing- we dont need to check position
     if (isGrowing){
@@ -190,15 +191,16 @@ class StepGenerator {
 
     let objectLeft = objectX;
     let objectRight = objectX + objectWidth;
-    let stepTop = tl0y - 2;  // Add small tolerance above step
-    let stepBottom = tl0y + 2;  // Add small tolerance below step
+    let Tolerance = 2;
+    let stepTop = tl0y - Tolerance;  // Add small tolerance above step
+    let stepBottom = tl0y + Tolerance;  // Add small tolerance below step
     
-    // First check vertical position (similar to Trex implementation)
+    // First check vertical position 
         if (~(objectBottomY > stepTop & objectBottomY < stepBottom)) { 
         return false; 
         }
 
-     // Then check horizontal overlap (similar to CactusCluster implementation)
+     // Then check horizontal overlap 
         if (objectRight < tl0x) { return false; }  // Princess is completely to left
         if (objectLeft > br0x) { return false; }   // Princess is completely to right
 

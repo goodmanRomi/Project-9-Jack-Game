@@ -5,9 +5,12 @@ Some key features of Jack include:
 -Object-Oriented Design: Supports classes, methods, fields, and objects.
 -Simple Syntax: Designed for clarity, avoiding the complexities of real-world languages.
 -Educational Focus: Encourages understanding of language compilation and translation.
-How to Use This Repository
+How to Use This Repository  
 
-*Clone the repository:
-*git clone [repository_url]
-*Compile the code using the Nand to Tetris [Jack Comipler](https://nand2tetris.github.io/web-ide/compiler) tool 
-*run the compiled vm code in the Nand to Tetris [VM emulator](https://nand2tetris.github.io/web-ide/vm) tool 
+*Clone the repository  
+*Compile the code using the Nand to Tetris [Jack Comipler](https://nand2tetris.github.io/web-ide/compiler) tool   
+*run the compiled vm code in the Nand to Tetris [VM emulator](https://nand2tetris.github.io/web-ide/vm) tool  
+
+Note: This project is still a work in progress, and additional updates will be made to enhance its functionality and completeness. Stay tuned for more!
+
+

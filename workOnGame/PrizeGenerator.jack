@@ -1,5 +1,11 @@
 class PrizeGenerator {
-
+    field int collectedPoints;
+    field boolean heartVisible, snowflakeVisible;  // Track if prizes are visible
+    field int heartX, heartY, snowflakeX, snowflakeY;  // Separate coordinates for each prize
+    field String collectionMessage;  // For displaying "+3 Great job!" etc.
+    field int messageTimer;  // Control how long the message displays
+    field int messageX, messageY;  // Store message position for clearing
+    field int messageWidth; 
     field int middleX, middleY;  // Center of the prize
     field int radius;           // Radius for collision detection
     field boolean isMoving;     // Movement state
@@ -8,29 +14,24 @@ class PrizeGenerator {
 
     constructor PrizeGenerator new(int startX, int startY) {
         // Initialize fields
+        let collectedPoints = 0;
+        let heartVisible = true;
+        let snowflakeVisible = true;
+        let messageTimer = 0;       
+        
+        let heartX = startX + 150;
+        let heartY = 150; 
+
+        let snowflakeX = startX + 300;
+        let snowflakeY = 130;  
+
         let isMoving = false;  // Prize starts stationary
-        let radius = 10;       // Collision radius
+        let radius = 20;       // Collision radius
         let width = 16;        // Width of the prize sprite
         let height = 16;       // Height of the prize sprite
 
-        // Set initial position (randomized near startX, startY)
-        do Output.printString("Enter key pressed\n");
-        do LCGRandom.setSeed(1234);
-
-        // Randomize the position of the prize
-        let middleX = LCGRandom.randRange(startX - 50, startX + 50);
-        let middleY = LCGRandom.randRange(startY - 10, startY + 10);
-
-        // Debug: Print randomized coordinates
-        do Output.printString("middleX: ");
-        do Output.printInt(middleX);
-        do Output.printString(", middleY: ");
-        do Output.printInt(middleY);
-        do Output.printString("\n");
-
-        // Calculate memory location and draw the heart
-        let newLocation = getMemLocation();
-        do drawHeart(600);
+        do drawHeart(((heartY * 32) + (heartX / 16)));
+        do drawSnowflake(((snowflakeY * 32) + (snowflakeX / 16)));
 
         return this;
     }
@@ -46,44 +47,153 @@ class PrizeGenerator {
     }
 
     method void update() {
+        var int oldHeartLoc, oldSnowLoc;
+
         if (~isMoving) {
             return;  // Don't move if not active
         }
 
-        // Save the current memory location
-        let oldLocation = getMemLocation();
+        if (heartVisible) {
+            let oldHeartLoc = ((heartY * 32) + (heartX / 16));
+            do eraseHeart(oldHeartLoc);
+            let heartX = heartX - 1;  // Move left
+            
+            // If heart goes off screen, reset its position
+            if (heartX < 0) {
+                let heartX = 511;  // Reset to right edge
+                let heartY = LCGRandom.randRange(130, 170);  // Random new height
+            }
+            
+            do drawHeart(((heartY * 32) + (heartX / 16)));
+            }
 
-        // Move the prize left by 1 pixel
-        let middleX = middleX - 1;
+            if (snowflakeVisible) {
+            let oldSnowLoc = ((snowflakeY * 32) + (snowflakeX / 16));
+            do eraseSnowflake(oldSnowLoc);
+            let snowflakeX = snowflakeX - 2;  // Move left faster than heart
+            
+            // If snowflake goes off screen, reset its position
+            if (snowflakeX < 0) {
+                let snowflakeX = 511;  // Reset to right edge
+                let snowflakeY = LCGRandom.randRange(120, 160);  // Different height range
+            }
+            
+            do drawSnowflake(((snowflakeY * 32) + (snowflakeX / 16)));
+            }
 
-        // Update the memory location
-        let newLocation = getMemLocation();
+            // Handle message display/cleanup
+            if (messageTimer > 0) {
+                let messageTimer = messageTimer - 1;
+                if (messageTimer = 0) {
+                    do clearMessage();
+                }
+            }
 
-        // Erase the prize at the old location and redraw at the new location
-        if (~(oldLocation = newLocation)) {
-            do eraseHeart(oldLocation);
-            do drawHeart(newLocation);
+            return;
+    }
+
+
+     method int getCollectedPoints() {
+        var int points;
+        let points = collectedPoints;
+        let collectedPoints = 0;  // Reset after retrieving
+        return points;
+    }
+
+    method void clearMessage() { //לחזור לכאן!
+        var String msg;
+        do Screen.setColor(false);  // Set to black
+        do Screen.drawRectangle(230, 50, 400,70 );
+        
+        if (collectionMessage) {  // If you have a field storing the message
+        do collectionMessage.dispose();
+        let collectionMessage = null;
+    }
+        return;
+    }
+
+
+    method void checkCollection(Princess princess) {
+        var int princessX, princessY;
+        var String msg1;  
+        var String msg2;  
+
+        let princessX = princess.getActualX();
+        let princessY = princess.getCollisionTop();
+
+
+        do Output.moveCursor(0, 0);
+        do Output.printString("Princess: (");
+        do Output.printInt(princessX);
+        do Output.printString(",");
+        do Output.printInt(princessY);
+        do Output.printString(")  Heart: (");
+        do Output.printInt(heartX);
+        do Output.printString(",");
+        do Output.printInt(heartY);
+        do Output.printString(")");
+
+
+        // Check heart collision
+        if (heartVisible) {
+            if (checkCollectionForPrize(princessX, princessY, heartX, heartY)) {
+                let heartVisible = false;
+                let collectedPoints = collectedPoints + 10;  // 10 points for heart
+                let msg1 = "+ 10 Great job!";
+                do showCollectionMessage(msg1);
+            }
         }
+
+        // Check snowflake collision
+        if (snowflakeVisible) {
+            if (checkCollectionForPrize(princessX, princessY, snowflakeX, snowflakeY)) {
+                let snowflakeVisible = false;
+                let collectedPoints = collectedPoints + 5;  // 5 points for snowflake
+                let msg2 = "+ 5 Cool!";
+                do showCollectionMessage(msg2);
+            }
+        }
+        return;
+    }
+
+
+    method boolean checkCollectionForPrize(int princessX, int princessY, int prizeX, int prizeY) {
+        var int deltaX, deltaY, distanceSquared;
+        let deltaX = prizeX - princessX;
+        let deltaY = prizeY - princessY;
+        let distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
+        return (~(distanceSquared > (radius * radius)));  // Returns true if collision detected
+    }
+
+    method void showCollectionMessage(String message) {
+        var String msgCopy;
+        let messageWidth = message.length() * 8;  // Approximate width based on text length
+        let msgCopy = message;
+
+        // Draw message
+        do Screen.setColor(true);
+        do Output.moveCursor(5, 30);
+        do Output.printString(msgCopy);
+        let messageTimer = 180;  
 
         return;
     }
 
-    method boolean checkCollection(int princessX, int princessY) {
-        // Check if the princess is within the radius of the prize
-        var int deltaX, deltaY, distanceSquared;
-
-        let deltaX = middleX - princessX;
-        let deltaY = middleY - princessY;
-
-        // Calculate squared distance
-        let distanceSquared = (deltaX * deltaX) + (deltaY * deltaY);
-
-        // Check if the distance is within the radius squared
-        if (~(distanceSquared > (radius * radius))) {
-            return true;  // Collected
+    method void reset() {
+        if (~heartVisible) {
+            let heartX = 511;  // Start from right edge
+            let heartY = LCGRandom.randRange(80, 120);
+            let heartVisible = true;
         }
-
-        return false;  // Not collected
+        
+        // Reset snowflake
+        if (~snowflakeVisible) {
+            let snowflakeX = 511 + 150;  // Start further right
+            let snowflakeY = LCGRandom.randRange(70, 100);
+            let snowflakeVisible = true;
+        }
+        
+        return;
     }
 
     method void drawHeart(int location) {
@@ -128,8 +238,163 @@ class PrizeGenerator {
         return;
     }
 
+    method void drawSpider(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		do Memory.poke(memAddress -320, -456);
+		do Memory.poke(memAddress -352, 0);
+		do Memory.poke(memAddress -288, -1588);
+		do Memory.poke(memAddress -256, 28804);
+		do Memory.poke(memAddress -224, 29888);
+		do Memory.poke(memAddress -192, -1572);
+		do Memory.poke(memAddress -160, -26);
+		do Memory.poke(memAddress -128, -62);
+		do Memory.poke(memAddress -96, -80);
+		do Memory.poke(memAddress -64, -232);
+		do Memory.poke(memAddress -32, -30516);
+		do Memory.poke(memAddress, 1124);
+		do Memory.poke(memAddress +32, 32);
+		do Memory.poke(memAddress -319, 227);
+		do Memory.poke(memAddress -351, 0);
+		do Memory.poke(memAddress -287, 412);
+		do Memory.poke(memAddress -255, 264);
+		do Memory.poke(memAddress -223, 25);
+		do Memory.poke(memAddress -191, 476);
+		do Memory.poke(memAddress -159, 831);
+		do Memory.poke(memAddress -127, 543);
+		do Memory.poke(memAddress -95, 111);
+		do Memory.poke(memAddress -63, 199);
+		do Memory.poke(memAddress -31, 408);
+		do Memory.poke(memAddress +1, 305);
+		do Memory.poke(memAddress +33, 32);
+		return;
+	}
+
+	method void eraseSpider(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		do Memory.poke(memAddress -320, 0);
+		do Memory.poke(memAddress -352, 0);
+		do Memory.poke(memAddress -288, 0);
+		do Memory.poke(memAddress -256, 0);
+		do Memory.poke(memAddress -224, 0);
+		do Memory.poke(memAddress -192, 0);
+		do Memory.poke(memAddress -160, 0);
+		do Memory.poke(memAddress -128, 0);
+		do Memory.poke(memAddress -96, 0);
+		do Memory.poke(memAddress -64, 0);
+		do Memory.poke(memAddress -32, 0);
+		do Memory.poke(memAddress, 0);
+		do Memory.poke(memAddress +32, 0);
+		do Memory.poke(memAddress -319, 0);
+		do Memory.poke(memAddress -351, 0);
+		do Memory.poke(memAddress -287, 0);
+		do Memory.poke(memAddress -255, 0);
+		do Memory.poke(memAddress -223, 0);
+		do Memory.poke(memAddress -191, 0);
+		do Memory.poke(memAddress -159, 0);
+		do Memory.poke(memAddress -127, 0);
+		do Memory.poke(memAddress -95, 0);
+		do Memory.poke(memAddress -63, 0);
+		do Memory.poke(memAddress -31, 0);
+		do Memory.poke(memAddress +1, 0);
+		do Memory.poke(memAddress +33, 0);
+		return;
+	}
+
+	method void drawSnowflake(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		// column 0
+		do Memory.poke(memAddress -704, 2048);
+		do Memory.poke(memAddress -672, 10752);
+		do Memory.poke(memAddress -640, 7168);
+		do Memory.poke(memAddress -608, 2088);
+		do Memory.poke(memAddress -576, 10800);
+		do Memory.poke(memAddress -544, 7224);
+		do Memory.poke(memAddress -512, 18752);
+		do Memory.poke(memAddress -480, -13952);
+		do Memory.poke(memAddress -448, -13888);
+		do Memory.poke(memAddress -416, 10258);
+		do Memory.poke(memAddress -384, 7204);
+		do Memory.poke(memAddress -352, -1);
+		do Memory.poke(memAddress -320, 7204);
+		do Memory.poke(memAddress -288, 10770);
+		do Memory.poke(memAddress -256, -13888);
+		do Memory.poke(memAddress -224, -13952);
+		do Memory.poke(memAddress -192, 18752);
+		do Memory.poke(memAddress -160, 7224);
+		do Memory.poke(memAddress -128, 10800);
+		do Memory.poke(memAddress -96, 2088);
+		do Memory.poke(memAddress -64, 7168);
+		do Memory.poke(memAddress -32, 10752);
+		do Memory.poke(memAddress, 2048);
+		// column 1
+		do Memory.poke(memAddress -607, 10);
+		do Memory.poke(memAddress -575, 6);
+		do Memory.poke(memAddress -543, 14);
+		do Memory.poke(memAddress -511, 1);
+		do Memory.poke(memAddress -447, 1);
+		do Memory.poke(memAddress -415, 36);
+		do Memory.poke(memAddress -383, 18);
+		do Memory.poke(memAddress -351, 127);
+		do Memory.poke(memAddress -319, 18);
+		do Memory.poke(memAddress -287, 36);
+		do Memory.poke(memAddress -255, 1);
+		do Memory.poke(memAddress -191, 1);
+		do Memory.poke(memAddress -159, 14);
+		do Memory.poke(memAddress -127, 6);
+		do Memory.poke(memAddress -95, 10);
+		return;
+	}
+
+	method void eraseSnowflake(int location) {
+		var int memAddress; 
+		let memAddress = 16384+location;
+		do Memory.poke(memAddress -704, 0);
+		do Memory.poke(memAddress -672, 0);
+		do Memory.poke(memAddress -640, 0);
+		do Memory.poke(memAddress -608, 0);
+		do Memory.poke(memAddress -576, 0);
+		do Memory.poke(memAddress -544, 0);
+		do Memory.poke(memAddress -512, 0);
+		do Memory.poke(memAddress -480, 0);
+		do Memory.poke(memAddress -448, 0);
+		do Memory.poke(memAddress -416, 0);
+		do Memory.poke(memAddress -384, 0);
+		do Memory.poke(memAddress -352, 0);
+		do Memory.poke(memAddress -320, 0);
+		do Memory.poke(memAddress -288, 0);
+		do Memory.poke(memAddress -256, 0);
+		do Memory.poke(memAddress -224, 0);
+		do Memory.poke(memAddress -192, 0);
+		do Memory.poke(memAddress -160, 0);
+		do Memory.poke(memAddress -128, 0);
+		do Memory.poke(memAddress -96, 0);
+		do Memory.poke(memAddress -64, 0);
+		do Memory.poke(memAddress -32, 0);
+		do Memory.poke(memAddress, 0);
+		do Memory.poke(memAddress -607, 0);
+		do Memory.poke(memAddress -575, 0);
+		do Memory.poke(memAddress -543, 0);
+		do Memory.poke(memAddress -511, 0);
+		do Memory.poke(memAddress -447, 0);
+		do Memory.poke(memAddress -415, 0);
+		do Memory.poke(memAddress -383, 0);
+		do Memory.poke(memAddress -351, 0);
+		do Memory.poke(memAddress -319, 0);
+		do Memory.poke(memAddress -287, 0);
+		do Memory.poke(memAddress -255, 0);
+		do Memory.poke(memAddress -191, 0);
+		do Memory.poke(memAddress -159, 0);
+		do Memory.poke(memAddress -127, 0);
+		do Memory.poke(memAddress -95, 0);
+		return;
+	}
+
     method void dispose() {
         do Memory.deAlloc(this);
         return;
     }
+
 }

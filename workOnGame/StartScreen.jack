@@ -1,0 +1,128 @@
+class StartScreen { 
+   
+    field PrizeGenerator sprites;
+    field Princess princess;
+
+   
+   constructor StartScreen new() {
+        return this;
+    }
+
+    method void drawStaticElements() {
+        var String text;
+        
+        // Clear screen once at start
+        do Screen.clearScreen();
+        
+        // Draw princess using your bitmap
+        do princess.drawPrincess(2100);
+        do Sys.wait(400);
+        
+        // Display the game title
+        let text = "Princess Parkour Adventure!";
+        do sprites.drawHeart(6350);
+        do sprites.drawSnowflake(500);
+        do Output.moveCursor(5, 10);
+        do Output.printString(text);
+        do text.dispose();
+        do Sys.wait(800);
+        
+        
+        let text = "created by Romi Goodman and Ophere Evan";
+        do Output.moveCursor(8, 5);
+        do Output.printString(text);
+        do sprites.drawHeart(1000);
+        do sprites.drawSnowflake(1200);
+        do sprites.drawSpider(8000);
+        do sprites.drawHeart(6360);
+        do text.dispose();
+        do Sys.wait(800);
+
+        let text = "Press T - Tutorial";
+        do Output.moveCursor(12, 10);
+        do Output.printString(text);
+        do sprites.drawSnowflake(6000);
+        do text.dispose();
+        do Sys.wait(800);
+
+        let text = "Press any key to start your adventure...";
+        do Output.moveCursor(14, 10);
+        do Output.printString(text);
+        do text.dispose();
+        do Sys.wait(800);
+        
+        return;
+    }
+
+    method void showTutorial() {
+        var String text;
+       
+        do Screen.clearScreen(); 
+        let text = "Tutorial: Learn the basics of Princess Parkour!";
+        do Output.moveCursor(2, 8);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "1. Jump from platform to platform using SPACE.";
+        do Output.moveCursor(4, 8);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "2. Use LEFT/RIGHT arrows to move.";
+        do Output.moveCursor(6, 8);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "3. Avoid spiders and falling into the water";
+        do Output.moveCursor(8, 8);
+        do Output.printString(text);
+        do text.dispose();
+
+        let text = "4. Collect: Hearts (+10), Snowflakes (+5)";
+        do Output.moveCursor(10, 8);
+        do Output.printString(text);
+        do text.dispose();
+        
+        let text = "Press any key to start the game...";
+        do Output.moveCursor(12, 8);
+        do Output.printString(text);
+        do text.dispose();
+        
+        return;
+        }
+
+    method int go() {
+        var boolean break;
+        var int key;
+        do drawStaticElements();
+        let break = false;
+        
+        while (~break) {
+        let key = Keyboard.keyPressed();
+            
+            if (key = 84) { 
+                do showTutorial();
+                // Wait for any key press to exit tutorial
+                while (Keyboard.keyPressed() = 0) {}  // Wait until a key is pressed
+                if (key > 0) { 
+                while (Keyboard.keyPressed() > 0) {}  // Wait until key is released
+                    let break = true; } }
+            else { 
+                    if (key > 0) { 
+                    let break = true;
+                    }
+                } 
+            }
+        
+        return key;
+    }
+
+    method void dispose() {
+        do sprites.dispose();
+        do princess.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+     
+}

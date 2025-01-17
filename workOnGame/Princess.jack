@@ -2,7 +2,6 @@ class Princess {
     field int xPos, yPos;    // Position
 	field int initialX;
     field int width, height;  // Dimensions
-    field int xVel;
     field int yVel;          // Vertical velocity
     field boolean isJumping;
     field StepManager step; // Reference to our step
@@ -26,9 +25,8 @@ class Princess {
       	let balanceX = 0;
 		// Initial position on the step
         let xPos = initialX; // Center on step
-        let yPos = stepRef.isStandingOnAny(xPos, width, yPos-1);      // Stand on top
+        let yPos = stepRef.getTopY() - 1;      // Stand on top
         let yVel = 0;
-		let xVel = 0;
         let isJumping = false;
 		let onPlatform = true;
         // Draw initial position
@@ -42,64 +40,76 @@ class Princess {
 		var int oldLocation, newLocation, nextPos, currentKey;
 		let oldLocation = getMemLocation();
 		let currentKey = Keyboard.keyPressed();
-
-        do handleMovement();
+		do handleMovement();
 
         // If no movement keys are pressed, move with platform
         if (step.isStandingOnAny(xPos, width, yPos-1) & step.isMoving()) {
                if (~(currentKey = 130) & ~(currentKey = 132) & ~(currentKey = 32)){
-                let nextPos = xPos-1;
-                //only move if not at screen boundry
-                if (nextPos>0){
-                    let xPos = nextPos; // Move left with platform speed
+                let initialX = initialX-1;
+				if (initialX<2) {
+					let initialX=2;
+				} 
                 }
-            }               
-        }
-
+            }
+		              
     	do princessMovement();
-
-    // Drawing update
-    let newLocation = getMemLocation();
-	if (~(oldLocation = newLocation)) { 
-		do erasePrincess(oldLocation);    // Use your erase method
-        do drawPrincess(newLocation);     // Draw at new position
-        }
-  
-        return;
-    }
+	
+		let xPos = initialX + balanceX;  // Calculate actual position
+		// Drawing update
+		let newLocation = getMemLocation();
+		if (~(oldLocation = newLocation)) { 
+			do erasePrincess(oldLocation);    // Use your erase method
+			do drawPrincess(newLocation);     // Draw at new position
+			}
+	
+		return;
+		}
     
 	method void moveleft() {        
-    var int oldLocation, newLocation;
-    let oldLocation = getMemLocation();
-
-    if (balanceX > -15) {
-		let xVel = -1;
-	    let balanceX = balanceX - 1;
-        let xPos = xPos + xVel;
+    if (isJumping) {
+        // More range during jumps
+        if (balanceX > -20) {  // Doubled the range during jumps
+            let balanceX = balanceX - 1;  // Faster movement in air
+        }
+    } else {
+        // Normal ground movement
+        if (balanceX > -15) {
+            let balanceX = balanceX - 1;
+        }
     }
     return;
 	}
 
-  
 	method void moveRight() {        
-    var int oldLocation, newLocation;
-    let oldLocation = getMemLocation();
-
-    if (balanceX < 15) {
-		let xVel = 1;
-        let balanceX = balanceX + 1;
-        let xPos = xPos + xVel;
+    if (isJumping) {
+        // More range during jumps
+        if (balanceX < 20) {  // Doubled the range during jumps
+            let balanceX = balanceX + 2;  // Faster movement in air
+        }
+    } else {
+        // Normal ground movement
+        if (balanceX < 15) {
+            let balanceX = balanceX + 2;
+        }
     }
     return;
 	}
-
 
 	method void handleMovement() {
-    if ((Keyboard.keyPressed() = 130)) {  // Left arrow
-        do moveleft(); 
+	var int currentKey;
+	let currentKey = Keyboard.keyPressed();
+	
+	// If no keys are pressed, stay in place
+    if (~(currentKey = 130) & ~(currentKey = 132)) {  
+        return;  // Just return without changing balanceX
     }
+
+	if ((Keyboard.keyPressed() = 130)) {
+		do moveleft(); 
+		}  
+         
     if (Keyboard.keyPressed() = 132) {  // Right arrow
-        do moveRight();
+		do moveRight();
     }
     return;
 	}
@@ -109,6 +119,8 @@ class Princess {
     }
   
    method void princessMovement(){
+	 	var StepGenerator landedStep;
+		let xPos = initialX + balanceX;
         let onPlatform = false;
     	if (step.isStandingOnAny(xPos, width, yPos-1)) { 
 		let onPlatform = true; 
@@ -125,32 +137,24 @@ class Princess {
 		let isJumping = true;
 		let onPlatform = false;
 		}
-		if (isJumping) {
+		if (isJumping) { 
 		let yVel = yVel + 1;  
 		let yPos = yPos + yVel;
-		let xPos = xPos + xVel;
-			if (xVel < 0 & balanceX > -15) {
-                let balanceX = balanceX - 1;
-            }
-            if (xVel > 0 & balanceX < 15) {
-                let balanceX = balanceX + 1;
-            }
 		}
 		if (yVel > 0) {
-			if (step.isStandingOnAny(xPos, width, yPos + yVel)){
+			if (step.isStandingOnAny(xPos, width, yPos)){
+			let landedStep = step.getCurrentStep();
+			if (~(landedStep = null)) {
+            	let initialX = landedStep.getInitialX();
+        		}	
 			let isJumping = false;
 			let yVel = 0;
 			let yPos = step.getTopY()-1;
 			let onPlatform = true;
-			}
-		} let xPos = xPos + xVel; 
+			
 
-		// Check if walked off platform
-        if ((~isJumping) & (~(step.isStandingOnAny(xPos, width, yPos)))) {
-            let isJumping = true;
-			let onPlatform = false;  // Start falling if no platform below
-            let yVel = 0;  // Start fall from rest
-        }
+			}
+		}
 
 		return;
 	}
@@ -262,6 +266,7 @@ class Princess {
         return getActualX() + width;
     }
     method void dispose() {
+		do step.dispose();
         do Memory.deAlloc(this);
         return;
     }

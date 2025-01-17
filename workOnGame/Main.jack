@@ -3,20 +3,32 @@ class Main {
         var Wave wave;
         var StepManager stepManager;
         var Princess princess;
-        var boolean exit;
+        var boolean exit,playAgain;
         var int i;
         var PrizeGenerator prizeGen;
         var int stepCounter;    // Counter for step movement timing
+        var StartScreen screen;
+        var EndScreen endScreen;
+        var int key;
+        var int score; 
+        var int timeCounter;
 
-        let wave = Wave.new();
-        let stepManager = StepManager.new(70, 200);    // First step
-        let princess = Princess.new(stepManager);
-        let prizeGen = PrizeGenerator.new(300, 150);  // Initialize prize generator
+        let playAgain = true;
+        while (playAgain) {  
+        let screen = StartScreen.new();
+        let key = screen.go();
+        if (key > 0) {
+            do Screen.clearScreen(); 
+            let wave = Wave.new();
+            let stepManager = StepManager.new(70, 200);    // First step
+            let princess = Princess.new(stepManager);
+            let prizeGen = PrizeGenerator.new(300, 150);  // Initialize prize generator
+            let exit = false;
+            let stepCounter = 0;
+            let score = 0;
+            let timeCounter = 0;
 
-        let exit = false;
-        let stepCounter = 0;
-
-        while ((~(exit)) & (~(princess.isDead()))) { 
+            while ((~(exit)) & (~(princess.isDead()))) { 
             // Check for Enter key (key code 128)
             if (Keyboard.keyPressed() = 128) {
                 do stepManager.startMoving();
@@ -27,19 +39,40 @@ class Main {
             do princess.update();
             do stepManager.update(); // Steps move left
             do prizeGen.update();  // Update prize movement
+
+            do prizeGen.checkCollection(princess);
+            let score = score + prizeGen.getCollectedPoints();  
+
+            // Time-based scoring (every ~1 second)
+                let timeCounter = timeCounter + 1;
+                if (timeCounter = 60) { 
+                    let score = score + 1;  
+                    let timeCounter = 0; 
+                }   
+        
             do Sys.wait(16);  // Base game delay
     
-          if (Keyboard.keyPressed() = 140) {  // ESC key
+            if (Keyboard.keyPressed() = 140) {  // ESC key
                 let exit = true;
+                }
+            }        
+
+            let endScreen = EndScreen.new(score);
+            let playAgain = endScreen.showGameOver();  // Get player's choice
+                
+                do endScreen.dispose();
+                do wave.dispose();
+                do princess.dispose();
+                do stepManager.dispose();
+                do prizeGen.dispose();
+                do screen.dispose();
+
             }
-        }        
-
-        do wave.dispose();
-        do princess.dispose();
-        do stepManager.dispose();
-        do prizeGen.dispose();
-
-        return;
-    }
         
+        } 
+    
+    return;
+
+    }
+
 }

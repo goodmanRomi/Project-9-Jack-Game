@@ -6,7 +6,9 @@ class StepManager {
     field StepGenerator step5;
     field StepGenerator step6;
     field int spacing;  // Horizontal spacing between steps
-    field StepGenerator lastCollidedStep;  // Track which step we last collided with
+    field StepGenerator currentStep;  // Track which step we last collided with
+    field int rightmostX; // Tracks the rightmost step
+
 
     constructor StepManager new(int startX, int startY) {
     let spacing = 80;  // Reduced spacing between steps
@@ -14,12 +16,12 @@ class StepManager {
     // Create all steps with increasing X positions
     let step1 = StepGenerator.new(70, 200);               // Leftmost
     let step2 = StepGenerator.new(70 + spacing, 180);     // Second
-    let step3 = StepGenerator.new(70 + (spacing * 2), 210); // Third
+    let step3 = StepGenerator.new(70 + (spacing * 2), 160); // Third
     let step4 = StepGenerator.new(70 + (spacing * 3), 120); // Fourth
     let step5 = StepGenerator.new(70 + (spacing * 4), 180); // Fifth
     let step6 = StepGenerator.new(70 + (spacing * 5), 150); // Rightmost
-    
-    let lastCollidedStep = step1;
+    let currentStep = step1; 
+    let rightmostX = 70 + (spacing * 5);
     return this;
     }
     
@@ -35,13 +37,19 @@ class StepManager {
 
     
     method void update() {
+        var int maxX;
         do step1.update();
         do step2.update();
         do step3.update();
         do step4.update();
         do step5.update();
         do step6.update();
+        let rightmostX = maxX;
         return;
+    }
+
+    method int getRightmostX() {
+        return rightmostX;
     }
 
     method boolean isMoving() {
@@ -51,21 +59,39 @@ class StepManager {
     
     method boolean isStandingOnAny(int objectX, int objectWidth, int objectBottomY) {
         // Check each step individually
-        if (step1.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
-        if (step2.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
-        if (step3.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
-        if (step4.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
-        if (step5.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
-        if (step6.isStandingOn(objectX, objectWidth, objectBottomY)) { return true; }
+        if (step1.isStandingOn(objectX, objectWidth, objectBottomY)) { 
+            let currentStep = step1;
+            return true; }
+        if (step2.isStandingOn(objectX, objectWidth, objectBottomY)) { 
+            let currentStep = step2;
+            return true; }
+        if (step3.isStandingOn(objectX, objectWidth, objectBottomY)) { 
+            let currentStep = step3;
+            return true; }
+        if (step4.isStandingOn(objectX, objectWidth, objectBottomY)) { 
+            let currentStep = step4;
+            return true; }
+        if (step5.isStandingOn(objectX, objectWidth, objectBottomY)) { 
+            let currentStep = step5;
+            return true; }
+        if (step6.isStandingOn(objectX, objectWidth, objectBottomY)) { 
+            let currentStep = step6;
+            return true; }
         return false;
     }
     
     method int getInitialX() {
         return step1.getInitialX();  // Use first step for initial position
     }
+
+    method StepGenerator getCurrentStep() {
+    return currentStep;
+    }
     
     method int getTopY() {
-        return step1.getTopY();  // Use first step for Y position
+        if (~(currentStep=null)) {
+            return currentStep.getTopY();
+        } return step1.getTopY();
     }
     
     method void dispose() {
